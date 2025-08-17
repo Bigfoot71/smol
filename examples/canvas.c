@@ -14,7 +14,7 @@ int main(void)
     sl_canvas_query(canvas, &color_target, NULL, NULL, NULL);
     sl_texture_parameters(color_target, SL_FILTER_BILINEAR, SL_WRAP_CLAMP);
 
-    sl_shader_id shader = sl_shader_load(RESOURCES_PATH "fractal.glsl");
+    sl_shader_id shader = sl_shader_load(RESOURCES_PATH "raymarch.glsl");
     int loc_time = sl_shader_uniform(shader, "u_time");
 
     while (sl_run()) {

@@ -9,7 +9,7 @@ int main(void)
 
     sl_frame_target(60);
 
-    sl_shader_id shader = sl_shader_load(RESOURCES_PATH "fractal.glsl");
+    sl_shader_id shader = sl_shader_load(RESOURCES_PATH "raymarch.glsl");
     int loc_time = sl_shader_uniform(shader, "u_time");
     sl_render_shader(shader);
 
