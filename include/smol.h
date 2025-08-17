@@ -1084,6 +1084,50 @@ SLAPI void sl_render_rectangle_ex(sl_vec2_t center, sl_vec2_t size, float rotati
  */
 SLAPI void sl_render_rectangle_lines_ex(sl_vec2_t center, sl_vec2_t size, float rotation, float thickness);
 
+/** Render rounded rectangle with configurable corner radius and quality
+ *  @param x Left coordinate
+ *  @param y Top coordinate
+ *  @param w Width
+ *  @param h Height
+ *  @param radius Corner radius (automatically clamped to max possible)
+ *  @param segments Number of segments per corner arc (higher = smoother)
+ */
+SLAPI void sl_render_rounded_rectangle(float x, float y, float w, float h, float radius, int segments);
+
+/** Render rounded rectangle outline with configurable corner radius and quality
+ *  Only works correctly in 2D
+ *  @param x Left coordinate
+ *  @param y Top coordinate
+ *  @param w Width
+ *  @param h Height
+ *  @param radius Corner radius (automatically clamped to max possible)
+ *  @param thickness Line thickness
+ *  @param segments Number of segments per corner arc (higher = smoother)
+ */
+SLAPI void sl_render_rounded_rectangle_lines(float x, float y, float w, float h, float radius, float thickness, int segments);
+
+/** Render rounded rectangle with center, size, rotation, and corner radius
+ *  Uses tessellation with fixed 8 segments per corner (no segments parameter due to arc limitations)
+ *  For custom segments, use basic functions with matrix transformations
+ *  @param center Center point of the rectangle
+ *  @param size Width and height as a vector
+ *  @param rotation Rotation angle in radians
+ *  @param radius Corner radius (automatically clamped to max possible)
+ */
+SLAPI void sl_render_rounded_rectangle_ex(sl_vec2_t center, sl_vec2_t size, float rotation, float radius);
+
+/** Render rotated rounded rectangle outline
+ *  Only works correctly in 2D
+ *  Uses tessellation with fixed 8 segments per corner (no segments parameter due to arc limitations)
+ *  For custom segments, use basic functions with matrix transformations
+ *  @param center Center point of the rectangle
+ *  @param size Width and height as a vector
+ *  @param rotation Rotation angle in radians
+ *  @param radius Corner radius (automatically clamped to max possible)
+ *  @param thickness Line thickness
+ */
+SLAPI void sl_render_rounded_rectangle_lines_ex(sl_vec2_t center, sl_vec2_t size, float rotation, float radius, float thickness);
+
 /** Render filled circle
  */
 SLAPI void sl_render_circle(sl_vec2_t p, float radius, int segments);

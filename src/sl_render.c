@@ -1096,6 +1096,223 @@ void sl_render_rectangle_lines_ex(sl_vec2_t center, sl_vec2_t size, float rotati
     sl_render_quad_lines(corners[0], corners[1], corners[2], corners[3], thickness);
 }
 
+void sl_render_rounded_rectangle(float x, float y, float w, float h, float radius, int segments)
+{
+    float max_radius = fminf(w * 0.5f, h * 0.5f);
+    radius = fminf(radius, max_radius);
+
+    // Center
+    sl_render_quad(
+        SL_VEC2(x + radius, y),
+        SL_VEC2(x + w - radius, y),
+        SL_VEC2(x + w - radius, y + h),
+        SL_VEC2(x + radius, y + h)
+    );
+
+    // Left
+    sl_render_quad(
+        SL_VEC2(x, y + radius),
+        SL_VEC2(x + radius, y + radius),
+        SL_VEC2(x + radius, y + h - radius),
+        SL_VEC2(x, y + h - radius)
+    );
+
+    // Right
+    sl_render_quad(
+        SL_VEC2(x + w - radius, y + radius),
+        SL_VEC2(x + w, y + radius),
+        SL_VEC2(x + w, y + h - radius),
+        SL_VEC2(x + w - radius, y + h - radius)
+    );
+
+    // Corners
+    sl_render_pie_slice(SL_VEC2(x + radius, y + radius), radius, SL_PI, SL_PI * 1.5f, segments);              // Top-left
+    sl_render_pie_slice(SL_VEC2(x + w - radius, y + radius), radius, SL_PI * 1.5f, SL_PI * 2.0f, segments);   // Top-right
+    sl_render_pie_slice(SL_VEC2(x + w - radius, y + h - radius), radius, 0, SL_PI * 0.5f, segments);          // Bottom-right
+    sl_render_pie_slice(SL_VEC2(x + radius, y + h - radius), radius, SL_PI * 0.5f, SL_PI, segments);          // Bottom-left
+}
+
+void sl_render_rounded_rectangle_lines(float x, float y, float w, float h, float radius, float thickness, int segments)
+{
+    float max_radius = fminf(w * 0.5f, h * 0.5f);
+    radius = fminf(radius, max_radius);
+
+    // Sides
+    sl_render_line(SL_VEC2(x + radius, y), SL_VEC2(x + w - radius, y), thickness);
+    sl_render_line(SL_VEC2(x + w, y + radius), SL_VEC2(x + w, y + h - radius), thickness);
+    sl_render_line(SL_VEC2(x + w - radius, y + h), SL_VEC2(x + radius, y + h), thickness);
+    sl_render_line(SL_VEC2(x, y + h - radius), SL_VEC2(x, y + radius), thickness);
+
+    // Corners
+    sl_render_arc(SL_VEC2(x + radius, y + radius), radius, SL_PI, SL_PI * 1.5f, thickness, segments);             // Top-left
+    sl_render_arc(SL_VEC2(x + w - radius, y + radius), radius, SL_PI * 1.5f, SL_PI * 2.0f, thickness, segments);  // Top-right
+    sl_render_arc(SL_VEC2(x + w - radius, y + h - radius), radius, 0, SL_PI * 0.5f, thickness, segments);         // Bottom-right
+    sl_render_arc(SL_VEC2(x + radius, y + h - radius), radius, SL_PI * 0.5f, SL_PI, thickness, segments);         // Bottom-left
+}
+
+void sl_render_rounded_rectangle_ex(sl_vec2_t center, sl_vec2_t size, float rotation, float radius)
+{
+    // For rotated rectangles, a tessellation approach is used
+    // because it is complex to transform the arcs directly
+
+    // You can also use the basic functions with a manual
+    // transformation if you need a specific number of segments
+
+    float max_radius = fminf(size.x * 0.5f, size.y * 0.5f);
+    radius = fminf(radius, max_radius);
+
+    #define SEGMENTS 8
+    #define TOTAL_POINTS (4 * SEGMENTS)
+
+    sl_vec2_t points[TOTAL_POINTS];
+
+    float half_w = size.x * 0.5f;
+    float half_h = size.y * 0.5f;
+
+    float cos_r = cosf(rotation);
+    float sin_r = sinf(rotation);
+
+    float angle_step = (SL_PI * 0.5f) / (SEGMENTS - 1);
+    float cos_step = cosf(angle_step);
+    float sin_step = sinf(angle_step);
+
+    int point_index = 0;
+
+    for (int corner = 0; corner < 4; corner++) {
+        float corner_x, corner_y, start_angle;
+        switch (corner) {
+            case 0: // Top-left
+                corner_x = -half_w + radius;
+                corner_y = -half_h + radius;
+                start_angle = SL_PI;
+                break;
+            case 1: // Top-right
+                corner_x = half_w - radius;
+                corner_y = -half_h + radius;
+                start_angle = SL_PI * 1.5f;
+                break;
+            case 2: // Bottom-right
+                corner_x = half_w - radius;
+                corner_y = half_h - radius;
+                start_angle = 0;
+                break;
+            case 3: // Bottom-left
+                corner_x = -half_w + radius;
+                corner_y = half_h - radius;
+                start_angle = SL_PI * 0.5f;
+                break;
+        }
+
+        float cos_current = cosf(start_angle);
+        float sin_current = sinf(start_angle);
+
+        for (int i = 0; i < SEGMENTS; i++) {
+            float local_x = corner_x + radius * cos_current;
+            float local_y = corner_y + radius * sin_current;
+
+            float x_rot = local_x * cos_r - local_y * sin_r;
+            float y_rot = local_x * sin_r + local_y * cos_r;
+
+            points[point_index].x = center.x + x_rot;
+            points[point_index].y = center.y + y_rot;
+            point_index++;
+
+            if (i < SEGMENTS - 1) {
+                float new_cos = cos_current * cos_step - sin_current * sin_step;
+                float new_sin = sin_current * cos_step + cos_current * sin_step;
+                cos_current = new_cos;
+                sin_current = new_sin;
+            }
+        }
+    }
+
+    for (int i = 1; i < TOTAL_POINTS - 1; i++) {
+        sl_render_triangle(points[0], points[i], points[i + 1]);
+    }
+
+    #undef TOTAL_POINTS
+    #undef SEGMENTS
+}
+
+void sl_render_rounded_rectangle_lines_ex(sl_vec2_t center, sl_vec2_t size, float rotation, float radius, float thickness)
+{
+    float max_radius = fminf(size.x * 0.5f, size.y * 0.5f);
+    radius = fminf(radius, max_radius);
+
+    #define SEGMENTS 8
+    #define TOTAL_POINTS (4 * SEGMENTS)
+
+    sl_vec2_t points[TOTAL_POINTS];
+
+    float half_w = size.x * 0.5f;
+    float half_h = size.y * 0.5f;
+
+    float cos_r = cosf(rotation);
+    float sin_r = sinf(rotation);
+
+    float angle_step = (SL_PI * 0.5f) / (SEGMENTS - 1);
+    float cos_step = cosf(angle_step);
+    float sin_step = sinf(angle_step);
+
+    int point_index = 0;
+
+    for (int corner = 0; corner < 4; corner++) {
+        float corner_x, corner_y, start_angle;
+        switch (corner) {
+        case 0:
+            corner_x = -half_w + radius;
+            corner_y = -half_h + radius;
+            start_angle = SL_PI;
+            break;
+        case 1:
+            corner_x = half_w - radius;
+            corner_y = -half_h + radius;
+            start_angle = SL_PI * 1.5f;
+            break;
+        case 2:
+            corner_x = half_w - radius;
+            corner_y = half_h - radius;
+            start_angle = 0;
+            break;
+        case 3:
+            corner_x = -half_w + radius;
+            corner_y = half_h - radius;
+            start_angle = SL_PI * 0.5f;
+            break;
+        }
+
+        float cos_current = cosf(start_angle);
+        float sin_current = sinf(start_angle);
+
+        for (int i = 0; i < SEGMENTS; i++) {
+            float local_x = corner_x + radius * cos_current;
+            float local_y = corner_y + radius * sin_current;
+
+            float x_rot = local_x * cos_r - local_y * sin_r;
+            float y_rot = local_x * sin_r + local_y * cos_r;
+
+            points[point_index].x = center.x + x_rot;
+            points[point_index].y = center.y + y_rot;
+            point_index++;
+
+            if (i < SEGMENTS - 1) {
+                float new_cos = cos_current * cos_step - sin_current * sin_step;
+                float new_sin = sin_current * cos_step + cos_current * sin_step;
+                cos_current = new_cos;
+                sin_current = new_sin;
+            }
+        }
+    }
+
+    for (int i = 0; i < TOTAL_POINTS; i++) {
+        int next = (i + 1) % TOTAL_POINTS;
+        sl_render_line(points[i], points[next], thickness);
+    }
+
+    #undef TOTAL_POINTS
+    #undef SEGMENTS
+}
+
 void sl_render_circle(sl_vec2_t center, float radius, int segments)
 {
     if (segments < 3) segments = 32;
