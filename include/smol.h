@@ -2344,7 +2344,7 @@ static inline float sl_saturate(float x)
 /**
  * @brief Wrap integer to [min, max)
  */
-static inline int sl_wrap_modei(int value, int min, int max)
+static inline int sl_wrapi(int value, int min, int max)
 {
     int range = max - min;
     return min + (value - min) % range;
@@ -2353,7 +2353,7 @@ static inline int sl_wrap_modei(int value, int min, int max)
 /**
  * @brief Wrap float to [min, max)
  */
-static inline float sl_wrap_mode(float value, float min, float max)
+static inline float sl_wrap(float value, float min, float max)
 {
     float range = max - min;
     return min + fmodf(value - min, range);
@@ -2362,7 +2362,7 @@ static inline float sl_wrap_mode(float value, float min, float max)
 /**
  * @brief Wrap radians to [-Pi, Pi]
  */
-static inline float sl_wrap_mode_radians(float radians)
+static inline float sl_wrap_radians(float radians)
 {
     float wrapped = fmodf(radians, SL_TAU);
     if (wrapped < -SL_PI) {
@@ -2435,7 +2435,7 @@ static inline float sl_lerp(float a, float b, float t)
  */
 static inline float sl_lerp_radians(float a, float b, float t)
 {
-    return a + sl_wrap_mode_radians(b - a) * t;
+    return a + sl_wrap_radians(b - a) * t;
 }
 
 /**

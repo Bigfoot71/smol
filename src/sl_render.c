@@ -1460,7 +1460,7 @@ void sl_render_pie_slice(sl_vec2_t center, float radius, float start_angle, floa
     if (segments < 1) segments = 16;
 
     float angle_diff = end_angle - start_angle;
-    angle_diff = sl_wrap_mode_radians(angle_diff);
+    angle_diff = sl_wrap_radians(angle_diff);
     if (angle_diff < 0.0f) angle_diff += SL_TAU;
 
     float delta_angle = angle_diff / (float)segments;
@@ -1505,7 +1505,7 @@ void sl_render_pie_slice_lines(sl_vec2_t center, float radius, float start_angle
     if (segments < 1) segments = 16;
 
     float angle_diff = end_angle - start_angle;
-    angle_diff = sl_wrap_mode_radians(angle_diff);
+    angle_diff = sl_wrap_radians(angle_diff);
     if (angle_diff < 0.0f) angle_diff += SL_TAU;
 
     float delta_angle = angle_diff / (float)segments;
@@ -1625,7 +1625,7 @@ void sl_render_ring_arc(sl_vec2_t center, float inner_radius, float outer_radius
     if (inner_radius >= outer_radius) return;
 
     float angle_diff = end_angle - start_angle;
-    angle_diff = sl_wrap_mode_radians(angle_diff);
+    angle_diff = sl_wrap_radians(angle_diff);
     if (angle_diff < 0.0f) angle_diff += SL_TAU;
 
     float delta_angle = angle_diff / (float)segments;
@@ -1684,7 +1684,7 @@ void sl_render_ring_arc_lines(sl_vec2_t center, float inner_radius, float outer_
     if (inner_radius >= outer_radius) return;
 
     float angle_diff = end_angle - start_angle;
-    angle_diff = sl_wrap_mode_radians(angle_diff);
+    angle_diff = sl_wrap_radians(angle_diff);
     if (angle_diff < 0.0f) angle_diff += SL_TAU;
 
     float delta_angle = angle_diff / (float)segments;
@@ -1771,7 +1771,7 @@ void sl_render_arc(sl_vec2_t center, float radius,
     if (segments < 1) segments = 16;
 
     float angle_diff = end_angle - start_angle;
-    angle_diff = sl_wrap_mode_radians(angle_diff);
+    angle_diff = sl_wrap_radians(angle_diff);
     if (angle_diff < 0.0f) angle_diff += SL_TAU;
 
     float delta_angle = angle_diff / (float)segments;

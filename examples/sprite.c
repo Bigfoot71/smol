@@ -26,7 +26,7 @@ sprite_t load_sprite(const char* path, int cols, int rows)
 
 void draw_sprite(sprite_t s, int frame, float x, float y, float scale) 
 {
-    frame = (int)sl_wrap_mode(frame, 0, s.count);
+    frame = (int)sl_wrap(frame, 0, s.count);
     
     int col = frame % s.cols;
     int row = frame / s.cols;
