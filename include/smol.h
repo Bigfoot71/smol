@@ -1019,68 +1019,131 @@ SLAPI void sl_render_scale(sl_vec3_t v);
 /** Apply a matrix to current transform */
 SLAPI void sl_render_transform(const sl_mat4_t* matrix);
 
-/** Render triangles from array (triangle list) */
+/** Render triangles from array (triangle list)
+ *  @param triangles Array of vertices, 3 vertices per triangle
+ *  @param triangle_count Number of triangles to render
+ */
 SLAPI void sl_render_triangle_list(const sl_vertex_t* triangles, int triangle_count);
 
-/** Render connected triangles (triangle strip) */
+/** Render connected triangles (triangle strip)
+ *  @param vertices Array of vertices forming a strip
+ *  @param count Total number of vertices
+ */
 SLAPI void sl_render_triangle_strip(const sl_vertex_t* vertices, int count);
 
-/** Render connected triangles forming a fan */
+/** Render connected triangles forming a fan
+ *  @param vertices Array of vertices, first vertex is the fan center
+ *  @param count Total number of vertices
+ */
 SLAPI void sl_render_triangle_fan(const sl_vertex_t* vertices, int count);
 
-/** Render quads from array (quad list) */
+/** Render quads from array (quad list)
+ *  @param quads Array of vertices, 4 vertices per quad
+ *  @param quad_count Number of quads to render
+ */
 SLAPI void sl_render_quad_list(const sl_vertex_t* quads, int quad_count);
 
-/** Render connected quads (quad strip) */
+/** Render connected quads (quad strip)
+ *  @param vertices Array of vertices forming a strip
+ *  @param count Total number of vertices
+ */
 SLAPI void sl_render_quad_strip(const sl_vertex_t* vertices, int count);
 
-/** Render connected quads forming a fan */
+/** Render connected quads forming a fan
+ *  @param vertices Array of vertices, first vertex is the fan center
+ *  @param count Total number of vertices
+ */
 SLAPI void sl_render_quad_fan(const sl_vertex_t* vertices, int count);
 
 /** Render lines from array (line list)
  *  Only works correctly in 2D
+ *  @param lines Array of points, 2 points per line
+ *  @param line_count Number of lines to render
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_line_list(const sl_vec2_t* lines, int line_count, float thickness);
 
 /** Render connected lines (line strip)
  *  Only works correctly in 2D
+ *  @param points Array of connected points
+ *  @param count Number of points
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_line_strip(const sl_vec2_t* points, int count, float thickness);
 
 /** Render closed line loop
  *  Only works correctly in 2D
+ *  @param points Array of points forming a closed loop
+ *  @param count Number of points
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_line_loop(const sl_vec2_t* points, int count, float thickness);
 
-/** Render a single triangle */
+/** Render a single triangle
+ *  @param p0 First vertex
+ *  @param p1 Second vertex
+ *  @param p2 Third vertex
+ */
 SLAPI void sl_render_triangle(sl_vec2_t p0, sl_vec2_t p1, sl_vec2_t p2);
 
 /** Render triangle outline
  *  Only works correctly in 2D
+ *  @param p0 First vertex
+ *  @param p1 Second vertex
+ *  @param p2 Third vertex
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_triangle_lines(sl_vec2_t p0, sl_vec2_t p1, sl_vec2_t p2, float thickness);
 
-/** Render a single quad */
+/** Render a single quad
+ *  @param p0 First vertex (typically top-left)
+ *  @param p1 Second vertex (typically bottom-left)
+ *  @param p2 Third vertex (typically bottom-right)
+ *  @param p3 Fourth vertex (typically top-right)
+ */
 SLAPI void sl_render_quad(sl_vec2_t p0, sl_vec2_t p1, sl_vec2_t p2, sl_vec2_t p3);
 
 /** Render quad outline
  *  Only works correctly in 2D
+ *  @param p0 First vertex
+ *  @param p1 Second vertex
+ *  @param p2 Third vertex
+ *  @param p3 Fourth vertex
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_quad_lines(sl_vec2_t p0, sl_vec2_t p1, sl_vec2_t p2, sl_vec2_t p3, float thickness);
 
-/** Render rectangle */
+/** Render rectangle
+ *  @param x Left coordinate
+ *  @param y Top coordinate
+ *  @param w Width
+ *  @param h Height
+ */
 SLAPI void sl_render_rectangle(float x, float y, float w, float h);
 
 /** Render rectangle outline
  *  Only works correctly in 2D
+ *  @param x Left coordinate
+ *  @param y Top coordinate
+ *  @param w Width
+ *  @param h Height
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_rectangle_lines(float x, float y, float w, float h, float thickness);
 
-/** Render rectangle with center, size, and rotation */
+/** Render rectangle with center, size, and rotation
+ *  @param center Center point of the rectangle
+ *  @param size Width and height as a vector
+ *  @param rotation Rotation angle in radians
+ */
 SLAPI void sl_render_rectangle_ex(sl_vec2_t center, sl_vec2_t size, float rotation);
 
 /** Render rotated rectangle outline
  *  Only works correctly in 2D
+ *  @param center Center point of the rectangle
+ *  @param size Width and height as a vector
+ *  @param rotation Rotation angle in radians
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_rectangle_lines_ex(sl_vec2_t center, sl_vec2_t size, float rotation, float thickness);
 
@@ -1101,7 +1164,7 @@ SLAPI void sl_render_rounded_rectangle(float x, float y, float w, float h, float
  *  @param w Width
  *  @param h Height
  *  @param radius Corner radius (automatically clamped to max possible)
- *  @param thickness Line thickness
+ *  @param thickness Line thickness in pixels
  *  @param segments Number of segments per corner arc (higher = smoother)
  */
 SLAPI void sl_render_rounded_rectangle_lines(float x, float y, float w, float h, float radius, float thickness, int segments);
@@ -1124,97 +1187,236 @@ SLAPI void sl_render_rounded_rectangle_ex(sl_vec2_t center, sl_vec2_t size, floa
  *  @param size Width and height as a vector
  *  @param rotation Rotation angle in radians
  *  @param radius Corner radius (automatically clamped to max possible)
- *  @param thickness Line thickness
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_rounded_rectangle_lines_ex(sl_vec2_t center, sl_vec2_t size, float rotation, float radius, float thickness);
 
 /** Render filled circle
+ *  @param p Center position
+ *  @param radius Circle radius
+ *  @param segments Number of segments (higher = smoother circle)
  */
 SLAPI void sl_render_circle(sl_vec2_t p, float radius, int segments);
 
 /** Render circle outline
  *  Only works correctly in 2D
+ *  @param p Center position
+ *  @param radius Circle radius
+ *  @param segments Number of segments (higher = smoother circle)
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_circle_lines(sl_vec2_t p, float radius, int segments, float thickness);
 
-/** Render filled ellipse */
+/** Render filled ellipse
+ *  @param p Center position
+ *  @param r Radii as vector (x = horizontal radius, y = vertical radius)
+ *  @param segments Number of segments (higher = smoother ellipse)
+ */
 SLAPI void sl_render_ellipse(sl_vec2_t p, sl_vec2_t r, int segments);
 
 /** Render ellipse outline
  *  Only works correctly in 2D
+ *  @param p Center position
+ *  @param r Radii as vector (x = horizontal radius, y = vertical radius)
+ *  @param segments Number of segments (higher = smoother ellipse)
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_ellipse_lines(sl_vec2_t p, sl_vec2_t r, int segments, float thickness);
 
-/** Render filled pie slice */
+/** Render filled pie slice
+ *  @param center Center position
+ *  @param radius Pie slice radius
+ *  @param start_angle Starting angle in radians
+ *  @param end_angle Ending angle in radians
+ *  @param segments Number of segments for the arc (higher = smoother)
+ */
 SLAPI void sl_render_pie_slice(sl_vec2_t center, float radius, float start_angle, float end_angle, int segments);
 
-/** Render pie slice outline
+/** Render pie slice outline (includes radial lines to center)
  *  Only works correctly in 2D
+ *  @param center Center position
+ *  @param radius Pie slice radius
+ *  @param start_angle Starting angle in radians
+ *  @param end_angle Ending angle in radians
+ *  @param segments Number of segments for the arc (higher = smoother)
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_pie_slice_lines(sl_vec2_t center, float radius, float start_angle, float end_angle, int segments, float thickness);
 
-/** Render filled ring */
+/** Render filled ring (donut shape)
+ *  @param center Center position
+ *  @param inner_radius Inner radius of the ring
+ *  @param outer_radius Outer radius of the ring
+ *  @param segments Number of segments (higher = smoother ring)
+ */
 SLAPI void sl_render_ring(sl_vec2_t center, float inner_radius, float outer_radius, int segments);
 
 /** Render ring outline
  *  Only works correctly in 2D
+ *  @param center Center position
+ *  @param inner_radius Inner radius of the ring
+ *  @param outer_radius Outer radius of the ring
+ *  @param segments Number of segments (higher = smoother ring)
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_ring_lines(sl_vec2_t center, float inner_radius, float outer_radius, int segments, float thickness);
 
-/** Render arc segment of a ring */
+/** Render arc segment of a ring (partial donut)
+ *  @param center Center position
+ *  @param inner_radius Inner radius of the ring
+ *  @param outer_radius Outer radius of the ring
+ *  @param start_angle Starting angle in radians
+ *  @param end_angle Ending angle in radians
+ *  @param segments Number of segments for the arc (higher = smoother)
+ */
 SLAPI void sl_render_ring_arc(sl_vec2_t center, float inner_radius, float outer_radius, float start_angle, float end_angle, int segments);
 
 /** Render outline of a ring arc
  *  Only works correctly in 2D
+ *  @param center Center position
+ *  @param inner_radius Inner radius of the ring
+ *  @param outer_radius Outer radius of the ring
+ *  @param start_angle Starting angle in radians
+ *  @param end_angle Ending angle in radians
+ *  @param segments Number of segments for the arc (higher = smoother)
+ *  @param thickness Line thickness in pixels
  */
 SLAPI void sl_render_ring_arc_lines(sl_vec2_t center, float inner_radius, float outer_radius, float start_angle, float end_angle, int segments, float thickness);
 
-/** Render a simple line (2D only) */
+/** Render a line using quad-based rendering for thickness compatibility and batching
+ *  Thickness is projection-relative, works correctly in 2D only
+ *  For 3D lines, use sl_render_mesh_lines instead
+ *  This limitation applies to all line rendering functions except meshes
+ *  @param p0 Start point
+ *  @param p1 End point
+ *  @param thickness Line thickness in pixels
+ */
 SLAPI void sl_render_line(sl_vec2_t p0, sl_vec2_t p1, float thickness);
 
-/** Render an arc (2D only) */
+/** Render an arc
+ *  Only works correctly in 2D
+ *  @param center Center position
+ *  @param radius Arc radius
+ *  @param start_angle Starting angle in radians
+ *  @param end_angle Ending angle in radians
+ *  @param thickness Line thickness in pixels
+ *  @param segments Number of segments (higher = smoother arc)
+ */
 SLAPI void sl_render_arc(sl_vec2_t center, float radius, float start_angle, float end_angle, float thickness, int segments);
 
-/** Render quadratic Bézier curve (2D only) */
+/** Render quadratic Bézier curve
+ *  Only works correctly in 2D
+ *  @param p0 Start point
+ *  @param p1 Control point
+ *  @param p2 End point
+ *  @param segments Number of line segments to approximate the curve
+ */
 SLAPI void sl_render_bezier_quad(sl_vec2_t p0, sl_vec2_t p1, sl_vec2_t p2, int segments);
 
-/** Render cubic Bézier curve (2D only) */
+/** Render cubic Bézier curve
+ *  Only works correctly in 2D
+ *  @param p0 Start point
+ *  @param p1 First control point
+ *  @param p2 Second control point
+ *  @param p3 End point
+ *  @param segments Number of line segments to approximate the curve
+ */
 SLAPI void sl_render_bezier_cubic(sl_vec2_t p0, sl_vec2_t p1, sl_vec2_t p2, sl_vec2_t p3, int segments);
 
-/** Render spline curve (2D only) */
+/** Render spline curve
+ *  Only works correctly in 2D
+ *  @param points Array of control points
+ *  @param count Number of control points
+ *  @param segments Number of line segments between each pair of points
+ */
 SLAPI void sl_render_spline(const sl_vec2_t* points, int count, int segments);
 
-/** Render cross symbol at given center */
+/** Render cross symbol at given center
+ *  @param center Center position of the cross
+ *  @param size Half-length of cross arms
+ *  @param thickness Line thickness in pixels
+ */
 SLAPI void sl_render_cross(sl_vec2_t center, float size, float thickness);
 
-/** Render grid lines (2D only) */
+/** Render grid lines
+ *  Only works correctly in 2D
+ *  @param x Left coordinate of the grid
+ *  @param y Top coordinate of the grid
+ *  @param w Total width of the grid
+ *  @param h Total height of the grid
+ *  @param cols Number of columns
+ *  @param rows Number of rows
+ *  @param thickness Line thickness in pixels
+ */
 SLAPI void sl_render_grid(float x, float y, float w, float h, int cols, int rows, float thickness);
 
-/** Render arrow from one point to another */
+/** Render arrow from one point to another
+ *  @param from Starting point
+ *  @param to Ending point (arrow head location)
+ *  @param head_size Size of the arrow head
+ *  @param thickness Line thickness in pixels
+ */
 SLAPI void sl_render_arrow(sl_vec2_t from, sl_vec2_t to, float head_size, float thickness);
 
-/** Render star shape */
+/** Render star shape
+ *  @param center Center position
+ *  @param outer_radius Distance from center to star points
+ *  @param inner_radius Distance from center to star indentations
+ *  @param points Number of star points (minimum 3)
+ */
 SLAPI void sl_render_star(sl_vec2_t center, float outer_radius, float inner_radius, int points);
 
-/** Render a single codepoint (character) */
+/** Render a single codepoint (character)
+ *  @param codepoint Unicode codepoint to render
+ *  @param position Base position for the character
+ *  @param font_size Font size in pixels
+ */
 SLAPI void sl_render_codepoint(int codepoint, sl_vec2_t position, float font_size);
 
-/** Render multiple codepoints sequentially */
+/** Render multiple codepoints sequentially
+ *  @param codepoints Array of Unicode codepoints
+ *  @param length Number of codepoints
+ *  @param position Starting position
+ *  @param font_size Font size in pixels
+ *  @param spacing Horizontal and vertical spacing between characters
+ */
 SLAPI void sl_render_codepoints(const int* codepoints, int length, sl_vec2_t position, float font_size, sl_vec2_t spacing);
 
-/** Render multiple codepoints centered on position */
+/** Render multiple codepoints centered on position
+ *  @param codepoints Array of Unicode codepoints
+ *  @param length Number of codepoints
+ *  @param position Center position
+ *  @param font_size Font size in pixels
+ *  @param spacing Horizontal and vertical spacing between characters
+ */
 SLAPI void sl_render_codepoints_centered(const int* codepoints, int length, sl_vec2_t position, float font_size, sl_vec2_t spacing);
 
-/** Render null-terminated text string */
+/** Render null-terminated text string
+ *  @param text UTF-8 encoded string
+ *  @param position Starting position
+ *  @param font_size Font size in pixels
+ *  @param spacing Horizontal and vertical spacing between characters
+ */
 SLAPI void sl_render_text(const char* text, sl_vec2_t position, float font_size, sl_vec2_t spacing);
 
-/** Render centered text string */
+/** Render centered text string
+ *  @param text UTF-8 encoded string
+ *  @param position Center position
+ *  @param font_size Font size in pixels
+ *  @param spacing Horizontal and vertical spacing between characters
+ */
 SLAPI void sl_render_text_centered(const char* text, sl_vec2_t position, float font_size, sl_vec2_t spacing);
 
-/** Render mesh, count = number of vertices or indices if index buffer used */
+/** Render mesh, count = number of vertices or indices if index buffer used
+ *  @param mesh Mesh to render
+ *  @param count Number of vertices or indices to render
+ */
 SLAPI void sl_render_mesh(sl_mesh_id mesh, uint32_t count);
 
-/** Render mesh as wireframe, count = number of vertices or indices if index buffer used */
+/** Render mesh as wireframe, count = number of vertices or indices if index buffer used
+ *  @param mesh Mesh to render as wireframe
+ *  @param count Number of vertices or indices to render
+ */
 SLAPI void sl_render_mesh_lines(sl_mesh_id mesh, uint32_t count);
 
 /** @} */ // end of Render
