@@ -1,0 +1,6 @@
+[submodule "external/SDL"]
+	path = external/SDL
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "external/mojoAL"]
+	path = external/mojoAL
+	url = https://github.com/icculus/mojoAL.git
