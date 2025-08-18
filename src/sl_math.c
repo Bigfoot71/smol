@@ -512,17 +512,17 @@ sl_mat4_t sl_mat4_transpose(const sl_mat4_t* mat)
 
 #if defined(SL__HAS_SSE)
 
-    __m128 row0 = _mm_load_ps(&M[0]);
-    __m128 row1 = _mm_load_ps(&M[4]);
-    __m128 row2 = _mm_load_ps(&M[8]);
-    __m128 row3 = _mm_load_ps(&M[12]);
+    __m128 row0 = _mm_loadu_ps(&M[0]);
+    __m128 row1 = _mm_loadu_ps(&M[4]);
+    __m128 row2 = _mm_loadu_ps(&M[8]);
+    __m128 row3 = _mm_loadu_ps(&M[12]);
 
     _MM_TRANSPOSE4_PS(row0, row1, row2, row3);
 
-    _mm_store_ps(&R[0],  row0);
-    _mm_store_ps(&R[4],  row1);
-    _mm_store_ps(&R[8],  row2);
-    _mm_store_ps(&R[12], row3);
+    _mm_storeu_ps(&R[0],  row0);
+    _mm_storeu_ps(&R[4],  row1);
+    _mm_storeu_ps(&R[8],  row2);
+    _mm_storeu_ps(&R[12], row3);
 
 #elif defined(SL__HAS_NEON)
 
@@ -620,10 +620,10 @@ sl_mat4_t sl_mat4_mul(const sl_mat4_t* SL_RESTRICT left, const sl_mat4_t* SL_RES
 
 #if defined(SL__HAS_FMA_AVX)
 
-    __m128 col0 = _mm_load_ps(&B[0]);
-    __m128 col1 = _mm_load_ps(&B[4]);
-    __m128 col2 = _mm_load_ps(&B[8]);
-    __m128 col3 = _mm_load_ps(&B[12]);
+    __m128 col0 = _mm_loadu_ps(&B[0]);
+    __m128 col1 = _mm_loadu_ps(&B[4]);
+    __m128 col2 = _mm_loadu_ps(&B[8]);
+    __m128 col3 = _mm_loadu_ps(&B[12]);
 
     for (int i = 0; i < 4; i++) {
         __m128 ai0 = _mm_broadcast_ss(&A[i * 4 + 0]);
@@ -636,15 +636,15 @@ sl_mat4_t sl_mat4_mul(const sl_mat4_t* SL_RESTRICT left, const sl_mat4_t* SL_RES
         row = _mm_fmadd_ps(ai2, col2, row);
         row = _mm_fmadd_ps(ai3, col3, row);
 
-        _mm_store_ps(&R[i * 4], row);
+        _mm_storeu_ps(&R[i * 4], row);
     }
 
 #elif defined(SL__HAS_AVX)
 
-    __m128 col0 = _mm_load_ps(&B[0]);
-    __m128 col1 = _mm_load_ps(&B[4]);
-    __m128 col2 = _mm_load_ps(&B[8]);
-    __m128 col3 = _mm_load_ps(&B[12]);
+    __m128 col0 = _mm_loadu_ps(&B[0]);
+    __m128 col1 = _mm_loadu_ps(&B[4]);
+    __m128 col2 = _mm_loadu_ps(&B[8]);
+    __m128 col3 = _mm_loadu_ps(&B[12]);
 
     for (int i = 0; i < 4; i++) {
         __m128 ai0 = _mm_broadcast_ss(&A[i * 4 + 0]);
@@ -657,15 +657,15 @@ sl_mat4_t sl_mat4_mul(const sl_mat4_t* SL_RESTRICT left, const sl_mat4_t* SL_RES
             _mm_add_ps(_mm_mul_ps(ai2, col2), _mm_mul_ps(ai3, col3))
         );
 
-        _mm_store_ps(&R[i * 4], row);
+        _mm_storeu_ps(&R[i * 4], row);
     }
 
 #elif defined(SL__HAS_SSE42)
 
-    __m128 col0 = _mm_load_ps(&B[0]);
-    __m128 col1 = _mm_load_ps(&B[4]);
-    __m128 col2 = _mm_load_ps(&B[8]);
-    __m128 col3 = _mm_load_ps(&B[12]);
+    __m128 col0 = _mm_loadu_ps(&B[0]);
+    __m128 col1 = _mm_loadu_ps(&B[4]);
+    __m128 col2 = _mm_loadu_ps(&B[8]);
+    __m128 col3 = _mm_loadu_ps(&B[12]);
 
     for (int i = 0; i < 4; i++) {
         __m128 ai0 = _mm_set1_ps(A[i * 4 + 0]);
@@ -678,18 +678,18 @@ sl_mat4_t sl_mat4_mul(const sl_mat4_t* SL_RESTRICT left, const sl_mat4_t* SL_RES
             _mm_add_ps(_mm_mul_ps(ai2, col2), _mm_mul_ps(ai3, col3))
         );
 
-        _mm_store_ps(&R[i * 4], row);
+        _mm_storeu_ps(&R[i * 4], row);
     }
 
 #elif defined(SL__HAS_SSE41)
 
-    __m128 col0 = _mm_load_ps(&B[0]);
-    __m128 col1 = _mm_load_ps(&B[4]);
-    __m128 col2 = _mm_load_ps(&B[8]);
-    __m128 col3 = _mm_load_ps(&B[12]);
+    __m128 col0 = _mm_loadu_ps(&B[0]);
+    __m128 col1 = _mm_loadu_ps(&B[4]);
+    __m128 col2 = _mm_loadu_ps(&B[8]);
+    __m128 col3 = _mm_loadu_ps(&B[12]);
 
     for (int i = 0; i < 4; i++) {
-        __m128 ai = _mm_load_ps(&A[i * 4]);
+        __m128 ai = _mm_loadu_ps(&A[i * 4]);
 
         R[i * 4 + 0] = _mm_cvtss_f32(_mm_dp_ps(ai, col0, 0xF1));
         R[i * 4 + 1] = _mm_cvtss_f32(_mm_dp_ps(ai, col1, 0xF1));
@@ -699,10 +699,10 @@ sl_mat4_t sl_mat4_mul(const sl_mat4_t* SL_RESTRICT left, const sl_mat4_t* SL_RES
 
 #elif defined(SL__HAS_SSE)
 
-    __m128 col0 = _mm_load_ps(&B[0]);
-    __m128 col1 = _mm_load_ps(&B[4]);
-    __m128 col2 = _mm_load_ps(&B[8]);
-    __m128 col3 = _mm_load_ps(&B[12]);
+    __m128 col0 = _mm_loadu_ps(&B[0]);
+    __m128 col1 = _mm_loadu_ps(&B[4]);
+    __m128 col2 = _mm_loadu_ps(&B[8]);
+    __m128 col3 = _mm_loadu_ps(&B[12]);
 
     for (int i = 0; i < 4; i++) {
         __m128 ai0 = _mm_set1_ps(A[i * 4 + 0]);
@@ -715,7 +715,7 @@ sl_mat4_t sl_mat4_mul(const sl_mat4_t* SL_RESTRICT left, const sl_mat4_t* SL_RES
             _mm_add_ps(_mm_mul_ps(ai2, col2), _mm_mul_ps(ai3, col3))
         );
 
-        _mm_store_ps(&R[i * 4], row);
+        _mm_storeu_ps(&R[i * 4], row);
     }
 
 #elif defined(SL__HAS_NEON_FMA)
