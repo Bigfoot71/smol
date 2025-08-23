@@ -116,6 +116,7 @@ extern struct sl__render {
 
     sl_mat4_t matrix_transform_stack[SL__MATRIX_STACK_SIZE];
     sl_mat4_t matrix_transform;
+    sl_mat4_t matrix_texture;
     sl_mat4_t matrix_normal;
     sl_mat4_t matrix_view;
     sl_mat4_t matrix_proj;

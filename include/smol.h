@@ -984,40 +984,80 @@ SLAPI void sl_render_uniform_mat2(int uniform, float* v, int count);
 SLAPI void sl_render_uniform_mat3(int uniform, float* v, int count);
 SLAPI void sl_render_uniform_mat4(int uniform, float* v, int count);
 
-/** Set projection matrix
+/**
+ * Set projection matrix
  * NULL restores default orthographic projection
  * Automatically flushes the batch
  */
 SLAPI void sl_render_projection(const sl_mat4_t* matrix);
 
-/** Set view matrix
+/**
+ * Set view matrix
  * NULL restores identity
  * Automatically flushes the batch
  */
 SLAPI void sl_render_view(const sl_mat4_t* matrix);
 
-/** Push a new transform matrix, inheriting previous
- * No draw call is created; vertices transformed on CPU
+/**
+ * Push a new transform matrix onto the stack, inheriting the previous one.
+ * Only affects CPU-side vertex transformation; does not impact texture or projection.
+ * No draw call is created.
  */
 SLAPI void sl_render_push(void);
 
-/** Pop previous transform matrix */
+/**
+ * Pop the last transform matrix from the stack.
+ * Only affects CPU-side vertex transformation; does not impact texture or projection.
+ */
 SLAPI void sl_render_pop(void);
 
-/** Reset current transform to identity */
+/**
+ * Reset the current transform to identity.
+ * Subsequent vertex transformations start from this state.
+ */
 SLAPI void sl_render_identity(void);
 
-/** Apply translation to current transform */
+/**
+ * Apply translation to the current transform matrix.
+ * @param v Translation vector
+ */
 SLAPI void sl_render_translate(sl_vec3_t v);
 
-/** Apply rotation to current transform */
+/**
+ * Apply rotation to the current transform matrix.
+ * @param v Rotation vector (Euler angles)
+ */
 SLAPI void sl_render_rotate(sl_vec3_t v);
 
-/** Apply scale to current transform */
+/**
+ * Apply scale to the current transform matrix.
+ * @param v Scaling factors for each axis
+ */
 SLAPI void sl_render_scale(sl_vec3_t v);
 
-/** Apply a matrix to current transform */
+/**
+ * Apply a custom matrix to the current transform.
+ * @param matrix Matrix to multiply with current transform
+ */
 SLAPI void sl_render_transform(const sl_mat4_t* matrix);
+
+/** Reset texture transform to identity */
+SLAPI void sl_render_texture_identity(void);
+
+/** Apply translation to texture transform
+ * @param v Translation vector for texture coordinates
+ */
+SLAPI void sl_render_texture_translate(sl_vec2_t v);
+
+/** Apply rotation to texture transform
+ * @param radians Rotation angle in radians for texture coordinates
+ */
+SLAPI void sl_render_texture_rotate(float radians);
+
+/** Apply scaling to texture transform
+ * @param v Scaling factors for texture coordinates
+ */
+SLAPI void sl_render_texture_scale(sl_vec2_t v);
 
 /** Render triangles from array (triangle list)
  *  @param triangles Array of vertices, 3 vertices per triangle

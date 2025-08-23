@@ -213,7 +213,7 @@ static void sl__render_check_state_change(void)
         sl__render.has_pending_data = true;
     }
     // Change state, commit current data
-    else if (memcmp(&current_state, &sl__render.last_state, sizeof(sl__render_state_t)) != 0) {
+    else if (SDL_memcmp(&current_state, &sl__render.last_state, sizeof(sl__render_state_t)) != 0) {
         sl__render_commit_current_data();
         sl__render.last_state = current_state;
         sl__render.has_pending_data = true;
@@ -238,7 +238,7 @@ static inline void sl__render_add_vertex(const sl_vertex_t* v)
 
     sl_vertex_t* vertex = &sl__render.vertex_buffer[sl__render.vertex_count];
     vertex->position = sl_vec3_transform(v->position, &sl__render.matrix_transform);
-    vertex->texcoord = v->texcoord;
+    vertex->texcoord = sl_vec2_transform(v->texcoord, &sl__render.matrix_texture);
     vertex->normal = sl_vec3_transform(v->normal, &sl__render.matrix_normal);
     vertex->color = v->color;
 
@@ -795,6 +795,29 @@ void sl_render_transform(const sl_mat4_t* matrix)
     sl__render.matrix_transform = sl_mat4_mul(&sl__render.matrix_transform, matrix);
     sl__render.matrix_normal = sl_mat4_inverse(&sl__render.matrix_transform);
     sl__render.matrix_normal = sl_mat4_transpose(&sl__render.matrix_normal);
+}
+
+void sl_render_texture_identity(void)
+{
+    sl__render.matrix_texture = SL_MAT4_IDENTITY;
+}
+
+void sl_render_texture_translate(sl_vec2_t v)
+{
+    sl_mat4_t translate = sl_mat4_translate(SL_VEC3(v.x, v.y, 0.0f));
+    sl__render.matrix_texture = sl_mat4_mul(&sl__render.matrix_texture, &translate);
+}
+
+void sl_render_texture_rotate(float radians)
+{
+    sl_mat4_t rotate = sl_mat4_rotate_z(radians);
+    sl__render.matrix_texture = sl_mat4_mul(&sl__render.matrix_texture, &rotate);
+}
+
+void sl_render_texture_scale(sl_vec2_t v)
+{
+    sl_mat4_t scale = sl_mat4_scale(SL_VEC3(v.x, v.y, 1.0f));
+    sl__render.matrix_texture = sl_mat4_mul(&sl__render.matrix_texture, &scale);
 }
 
 void sl_render_triangle_list(const sl_vertex_t* triangles, int triangle_count)

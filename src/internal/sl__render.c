@@ -44,6 +44,7 @@ bool sl__render_init(int w, int h)
 
     sl__render.matrix_proj = sl_mat4_ortho(0, w, h, 0, 0, 1);
     sl__render.matrix_transform = SL_MAT4_IDENTITY;
+    sl__render.matrix_texture = SL_MAT4_IDENTITY;
     sl__render.matrix_normal = SL_MAT4_IDENTITY;
     sl__render.matrix_view = SL_MAT4_IDENTITY;
 
