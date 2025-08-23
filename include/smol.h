@@ -2499,20 +2499,20 @@ static inline float sl_smoothstep(float edge0, float edge1, float x)
 /**
  * @brief Exponential decay
  */
-static inline float sl_exp_decay(float initial, float decayRate, float time)
+static inline float sl_exp_decay(float initial, float decay_rate, float time)
 {
-    return initial * expf(-decayRate * time);
+    return initial * expf(-decay_rate * time);
 }
 
 /**
- * @brief Move current value toward target by maxDelta
+ * @brief Move current value toward target by max delta
  */
-static inline float sl_move_toward(float current, float target, float maxDelta)
+static inline float sl_move_toward(float current, float target, float max_delta)
 {
     float delta = target - current;
     float distance = fabsf(delta);
-    if (distance <= maxDelta) return target;
-    else return current + (delta / distance) * maxDelta;
+    if (distance <= max_delta) return target;
+    else return current + (delta / distance) * max_delta;
 }
 
 /**
@@ -3597,7 +3597,7 @@ static inline sl_vec4_t sl_vec4_scale(sl_vec4_t v, float scalar)
 /**
  * @brief Normalize vector (length = 1). Returns SL_VEC4_ZERO if length is too small.
  */
-static inline sl_vec4_t nx_vec4_normalize(sl_vec4_t v)
+static inline sl_vec4_t sl_vec4_normalize(sl_vec4_t v)
 {
     float len = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
     if (len < 1e-4f) return SL_VEC4_ZERO;
@@ -3613,7 +3613,7 @@ static inline sl_vec4_t nx_vec4_normalize(sl_vec4_t v)
 /**
  * @brief Compute vector length.
  */
-static inline float nx_vec4_length(sl_vec4_t v)
+static inline float sl_vec4_length(sl_vec4_t v)
 {
     return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
 }
@@ -3621,7 +3621,7 @@ static inline float nx_vec4_length(sl_vec4_t v)
 /**
  * @brief Compute squared vector length.
  */
-static inline float nx_vec4_length_sq(sl_vec4_t v)
+static inline float sl_vec4_length_sq(sl_vec4_t v)
 {
     return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;
 }
@@ -3629,7 +3629,7 @@ static inline float nx_vec4_length_sq(sl_vec4_t v)
 /**
  * @brief Compute dot product between v1 and v2.
  */
-static inline float nx_vec4_dot(sl_vec4_t v1, sl_vec4_t v2)
+static inline float sl_vec4_dot(sl_vec4_t v1, sl_vec4_t v2)
 {
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w;
 }
@@ -3648,9 +3648,9 @@ static inline int sl_vec4_approx(sl_vec4_t v0, sl_vec4_t v1, float epsilon)
 }
 
 /**
- * @brief Move current vector toward target vector by at most maxDelta.
+ * @brief Move current vector toward target vector by at most max_delta.
  */
-static inline sl_vec4_t nx_vec4_move_toward(sl_vec4_t current, sl_vec4_t target, float maxDelta)
+static inline sl_vec4_t sl_vec4_move_toward(sl_vec4_t current, sl_vec4_t target, float max_delta)
 {
     sl_vec4_t delta;
     for (int i = 0; i < 4; ++i) {
@@ -3658,11 +3658,11 @@ static inline sl_vec4_t nx_vec4_move_toward(sl_vec4_t current, sl_vec4_t target,
     }
 
     float dist = sqrtf(delta.x * delta.x + delta.y * delta.y);
-    if (dist <= maxDelta) {
+    if (dist <= max_delta) {
         return target;
     }
 
-    float ratio = maxDelta / dist;
+    float ratio = max_delta / dist;
     for (int i = 0; i < 4; ++i) {
         current.v[i] = delta.v[i] * ratio;
     }
@@ -3673,7 +3673,7 @@ static inline sl_vec4_t nx_vec4_move_toward(sl_vec4_t current, sl_vec4_t target,
 /**
  * @brief Linear interpolation between v1 and v2.
  */
-static inline sl_vec4_t nx_vec4_lerp(sl_vec4_t v1, sl_vec4_t v2, float t)
+static inline sl_vec4_t sl_vec4_lerp(sl_vec4_t v1, sl_vec4_t v2, float t)
 {
     for (int i = 0; i < 4; ++i) {
         v1.v[i] += t * (v2.v[i] - v1.v[i]);
