@@ -101,7 +101,7 @@ set(SL_SOURCES
     "${SL_ROOT_PATH}/src/sl_core.c"
 )
 
-# Create the smol library target
+# Create the Smol library target
 
 if(SL_BUILD_SHARED_LIBS)
     add_library("${PROJECT_NAME}" SHARED ${SL_SOURCES})
@@ -123,7 +123,11 @@ elseif(UNIX)
     target_compile_definitions(${PROJECT_NAME} PUBLIC SL_PLATFORM_LINUX)
 endif()
 
-# Configure OpenGL ES 2.0
+# Adding SDL3 to Smol
+
+target_sources(${PROJECT_NAME} PRIVATE $<TARGET_OBJECTS:SDL3-static>)
+
+# Adding GLES2 to Smol
 
 target_sources(${PROJECT_NAME} PRIVATE external/glad/src/gles2.c)
 target_include_directories(${PROJECT_NAME} PRIVATE external/glad/include)
@@ -134,7 +138,7 @@ if(UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${EGL_LIB} ${GLES2_LIB})
 endif()
 
-# Configure OpenAL 1.1
+# Adding mojoAL to Smol
 
 add_definitions(-DAL_LIBTYPE_STATIC)
 
@@ -157,11 +161,6 @@ target_include_directories(${PROJECT_NAME}
 )
 
 # Link project dependencies
-
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        SDL3::SDL3-static
-)
 
 check_library_exists(m cos "" SL_HAVE_LIB_M)
 
