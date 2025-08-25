@@ -85,13 +85,13 @@ bool sl__audio_init(void)
 
     sl__audio.device = alcOpenDevice(NULL);
     if (sl__audio.device == NULL) {
-        sl_loge("CORE: Failed to create OpenAL device; %s", SDL_GetError());
+        sl_loge("AUDIO: Failed to create OpenAL device; %s", SDL_GetError());
         return false;
     }
 
     sl__audio.context = alcCreateContext(sl__audio.device, NULL);
     if (sl__audio.context == NULL) {
-        sl_loge("CORE: Failed to create OpenAL context; %s", SDL_GetError());
+        sl_loge("AUDIO: Failed to create OpenAL context; %s", SDL_GetError());
         return false;
     }
 
