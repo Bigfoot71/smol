@@ -126,7 +126,7 @@ void sl__audio_quit(void);
 /* === Helper Functions === */
 
 const char* sl__audio_get_format_name(ALenum format);
-size_t sl__audio_get_sample_count(size_t pcmDataSize, ALenum format);
+size_t sl__audio_get_sample_count(size_t pcm_date_size, ALenum format);
 sl__audio_format_t sl__audio_get_format(const uint8_t* data, size_t size);
 
 /* === Volume Functions === */

@@ -174,17 +174,17 @@ const char* sl__audio_get_format_name(ALenum format)
     return "Unknown";
 }
 
-size_t sl__audio_get_sample_count(size_t pcmDataSize, ALenum format)
+size_t sl__audio_get_sample_count(size_t pcm_date_size, ALenum format)
 {
     switch (format) {
     case AL_FORMAT_MONO8:
-        return pcmDataSize;
+        return pcm_date_size;
     case AL_FORMAT_MONO16:
-        return pcmDataSize / 2;
+        return pcm_date_size / 2;
     case AL_FORMAT_STEREO8:
-        return pcmDataSize / 2;
+        return pcm_date_size / 2;
     case AL_FORMAT_STEREO16:
-        return pcmDataSize / 4;
+        return pcm_date_size / 4;
     default:
         break;
     }
