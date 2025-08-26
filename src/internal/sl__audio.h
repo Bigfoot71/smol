@@ -155,6 +155,5 @@ void sl__music_thread_shutdown(void);   // Called in sl__audio_quit()
 int sl__music_stream_thread(void* data);
 void sl__music_unqueue_all_buffers(sl__music_t* music);
 void sl__music_prepare_buffers(sl__music_t* music);
-void sl__music_switch_to(sl_music_id music_id);
 
 #endif // SL__AUDIO_H
