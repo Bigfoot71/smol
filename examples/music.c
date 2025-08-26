@@ -8,7 +8,7 @@ int main(void)
     sl_init("Smol - Music Example", WIN_W, WIN_H, 0);
     sl_frame_target(60);
 
-    sl_music_id music = sl_music_load(RESOURCES_PATH "awesomeness.mp3");
+    sl_music_id music = sl_music_load(RESOURCES_PATH "awesomeness.ogg");
 
     sl_font_id font = sl_font_load(RESOURCES_PATH "font.ttf", SL_FONT_BITMAP, 64, 0, 0);
     sl_render_font(font);

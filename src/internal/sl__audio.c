@@ -483,11 +483,6 @@ bool sl__sound_load_ogg(sl__sound_raw_t* out, const void* data, size_t data_size
 
 /* === Stream Decoder Functions === */
 
-struct sl__decoder_ogg {
-    stb_vorbis* vorbis;
-    stb_vorbis_info info;
-};
-
 static size_t sl__decoder_wav_decode_samples(void* handle, void* buffer, size_t samples)
 {
     drwav* wav = (drwav*)handle;
@@ -546,25 +541,24 @@ static void sl__decoder_mp3_close(void* handle)
 
 static size_t sl__decoder_ogg_decode_samples(void* handle, void* buffer, size_t samples)
 {
-    struct sl__decoder_ogg* ogg = (struct sl__decoder_ogg*)handle;
+    stb_vorbis* vorbis = (stb_vorbis*)handle;
     int sample_read = stb_vorbis_get_samples_short_interleaved(
-        ogg->vorbis, ogg->info.channels, buffer,
-        samples * ogg->info.channels
+        vorbis, vorbis->channels, buffer,
+        samples * vorbis->channels
     );
     return sample_read;
 }
 
 static void sl__decoder_ogg_seek_sample(void* handle, size_t sample)
 {
-    struct sl__decoder_ogg* ogg = (struct sl__decoder_ogg*)handle;
-    stb_vorbis_seek(ogg->vorbis, sample);
+    stb_vorbis* vorbis = (stb_vorbis*)handle;
+    stb_vorbis_seek(vorbis, sample);
 }
 
 static void sl__decoder_ogg_close(void* handle)
 {
-    struct sl__decoder_ogg* ogg = (struct sl__decoder_ogg*)handle;
-    stb_vorbis_close(ogg->vorbis);
-    SDL_free(ogg);
+    stb_vorbis* vorbis = (stb_vorbis*)handle;
+    stb_vorbis_close(vorbis);
 }
 
 bool sl__decoder_init(sl__decoder_t* decoder, const void* data, size_t data_size, sl__audio_format_t format)
@@ -642,13 +636,9 @@ bool sl__decoder_init(sl__decoder_t* decoder, const void* data, size_t data_size
                 return false;
             }
 
-            struct sl__decoder_ogg* ogg = SDL_malloc(sizeof(struct sl__decoder_ogg));
-            ogg->vorbis = vorbis;
-            ogg->info = stb_vorbis_get_info(vorbis);
-
-            decoder->handle = ogg;
-            decoder->channels = ogg->info.channels;
-            decoder->sample_rate = ogg->info.sample_rate;
+            decoder->handle = vorbis;
+            decoder->channels = vorbis->channels;
+            decoder->sample_rate = vorbis->sample_rate;
             decoder->total_samples = stb_vorbis_stream_length_in_samples(vorbis);
             decoder->decode_func = sl__decoder_ogg_decode_samples;
             decoder->seek_func = sl__decoder_ogg_seek_sample;
