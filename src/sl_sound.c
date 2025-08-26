@@ -186,14 +186,29 @@ void sl_sound_destroy(sl_sound_id sound_id)
     sl__registry_remove(&sl__audio.reg_sounds, sound_id);
 }
 
-void sl_sound_play(sl_sound_id sound_id, int channel)
+int sl_sound_play(sl_sound_id sound_id, int channel)
 {
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
-    if (sound == NULL) return;
+    if (sound == NULL) return -1;
 
-    if (channel < 0 || channel >= sound->source_count) {
-        sl_loge("AUDIO: Invalid channel %d for sound (max: %d)", channel, sound->source_count - 1);
-        return;
+    /* --- Clamp given channel --- */
+
+    channel = SL_MIN(channel, sound->source_count - 1);
+
+    /* --- Select a free channel if necessary --- */
+
+    if (channel < 0) {
+        for (int i = 0; i < sound->source_count; i++) {
+            ALint state = 0;
+            alGetSourcei(sound->sources[i], AL_SOURCE_STATE, &state);
+            if (state != AL_PLAYING) {
+                channel = i;
+                break;
+            }
+        }
+        if (channel < 0) {
+            return -1;
+        }
     }
 
     /* --- Stop current playback on this channel if any --- */
@@ -201,40 +216,16 @@ void sl_sound_play(sl_sound_id sound_id, int channel)
     ALint state;
     alGetSourcei(sound->sources[channel], AL_SOURCE_STATE, &state);
     if (state == AL_PLAYING || state == AL_PAUSED) {
-        alSourceStop(sound->sources[channel]);
         alSourceRewind(sound->sources[channel]);
     }
 
     /* --- Play the sound on the specified channel --- */
 
     alSourcePlay(sound->sources[channel]);
-    
-    /* --- Apply current volume settings --- */
 
-    float final_volume = sl__audio_calculate_final_sound_volume();
-    alSourcef(sound->sources[channel], AL_GAIN, final_volume);
-}
+    /* --- Return used channel --- */
 
-int sl_sound_play_auto(sl_sound_id sound_id)
-{
-    sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
-    if (sound == NULL) return -1;
-
-    for (int i = 0; i < sound->source_count; i++) {
-        ALint state;
-        alGetSourcei(sound->sources[i], AL_SOURCE_STATE, &state);
-        if (state != AL_PLAYING) {
-            if (state == AL_PAUSED) {
-                alSourceRewind(sound->sources[i]);
-            }
-            float final_volume = sl__audio_calculate_final_sound_volume();
-            alSourcef(sound->sources[i], AL_GAIN, final_volume);
-            alSourcePlay(sound->sources[i]);
-            return i;
-        }
-    }
-
-    return -1; // No free channel found
+    return channel;
 }
 
 void sl_sound_pause(sl_sound_id sound_id, int channel)
@@ -242,11 +233,9 @@ void sl_sound_pause(sl_sound_id sound_id, int channel)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return;
 
-    if (channel < 0 || channel >= sound->source_count) {
-        return;
-    }
-
-    alSourcePause(sound->sources[channel]);
+    if (channel >= sound->source_count) return;
+    if (channel >= 0) alSourcePause(sound->sources[channel]);
+    else alSourcePausev(sound->source_count, sound->sources);
 }
 
 void sl_sound_stop(sl_sound_id sound_id, int channel)
@@ -254,21 +243,9 @@ void sl_sound_stop(sl_sound_id sound_id, int channel)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return;
 
-    if (channel < 0 || channel >= sound->source_count) {
-        return;
-    }
-
-    alSourceStop(sound->sources[channel]);
-}
-
-void sl_sound_stop_all(sl_sound_id sound_id)
-{
-    sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
-    if (sound == NULL) return;
-
-    for (int i = 0; i < sound->source_count; i++) {
-        alSourceStop(sound->sources[i]);
-    }
+    if (channel >= sound->source_count) return;
+    if (channel >= 0) alSourceStop(sound->sources[channel]);
+    else alSourceStopv(sound->source_count, sound->sources);
 }
 
 void sl_sound_rewind(sl_sound_id sound_id, int channel)
@@ -276,11 +253,9 @@ void sl_sound_rewind(sl_sound_id sound_id, int channel)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return;
 
-    if (channel < 0 || channel >= sound->source_count) {
-        return;
-    }
-
-    alSourceRewind(sound->sources[channel]);
+    if (channel >= sound->source_count) return;
+    if (channel >= 0) alSourceRewind(sound->sources[channel]);
+    else alSourceRewindv(sound->source_count, sound->sources);
 }
 
 bool sl_sound_is_playing(sl_sound_id sound_id, int channel)
@@ -288,27 +263,22 @@ bool sl_sound_is_playing(sl_sound_id sound_id, int channel)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return false;
 
-    if (channel < 0 || channel >= sound->source_count) {
+    if (channel >= sound->source_count) {
         return false;
     }
 
-    ALint state;
-    alGetSourcei(sound->sources[channel], AL_SOURCE_STATE, &state);
-    return (state == AL_PLAYING);
-}
-
-bool sl_sound_is_playing_any(sl_sound_id sound_id)
-{
-    sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
-    if (sound == NULL) return false;
+    if (channel >= 0) {
+        ALenum state = 0;
+        alGetSourcei(sound->sources[channel], AL_SOURCE_STATE, &state);
+        return (state == AL_PLAYING);
+    }
 
     for (int i = 0; i < sound->source_count; i++) {
-        ALint state;
+        ALenum state = 0;
         alGetSourcei(sound->sources[i], AL_SOURCE_STATE, &state);
-        if (state == AL_PLAYING) {
-            return true;
-        }
+        if (state == AL_PLAYING) return true;
     }
+
     return false;
 }
 

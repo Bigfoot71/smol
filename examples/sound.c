@@ -18,10 +18,10 @@ int main(void)
         sl_render_clear(SL_DARK_GRAY);
 
         if (sl_key_just_pressed(SL_KEY_SPACE)) {
-            sl_sound_play_auto(sound);
+            sl_sound_play(sound, -1);
         }
 
-        if (!sl_sound_is_playing_any(sound)) {
+        if (!sl_sound_is_playing(sound, -1)) {
             sl_render_color(SL_YELLOW);
             sl_render_text_centered("Press SPACE to play the sound!", SL_VEC2(320, 240), 32, SL_VEC2(2, 2));
         }

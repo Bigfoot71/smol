@@ -1883,78 +1883,59 @@ SLAPI void sl_audio_set_volume_sound(float volume);
 
 /**
  * @brief Load a sound from a file
- * @param file_path Path to the sound file
- * @param channel_count Number of channels for polyphony
- * @return Sound ID on success, 0 or invalid ID on failure
+ * @param file_path Path to the sound file (supports WAV, FLAC, MP3, OGG)
+ * @param channel_count Number of channels for polyphony (must be > 0)
+ * @return Sound ID on success, 0 on failure
  */
 SLAPI sl_sound_id sl_sound_load(const char* file_path, int channel_count);
 
 /**
- * @brief Destroy a loaded sound
- * @param sound_id Sound ID
+ * @brief Destroy a loaded sound and free all associated resources
+ * @param sound_id Sound ID to destroy
  */
 SLAPI void sl_sound_destroy(sl_sound_id sound_id);
 
 /**
- * @brief Play a sound on a specific channel
- * @param sound_id Sound ID
- * @param channel Channel index
+ * @brief Play a sound on a specific channel or automatically find a free one
+ * @param sound_id Sound ID to play
+ * @param channel Channel index (>= 0) or negative value to auto-select first available channel
+ * @return Channel index where the sound is played, or -1 if no channel is available
  */
-SLAPI void sl_sound_play(sl_sound_id sound_id, int channel);
+SLAPI int sl_sound_play(sl_sound_id sound_id, int channel);
 
 /**
- * @brief Play a sound automatically on the first available channel
- * @param sound_id Sound ID
- * @return Channel index where the sound is played
- */
-SLAPI int sl_sound_play_auto(sl_sound_id sound_id);
-
-/**
- * @brief Pause a sound on a specific channel
- * @param sound_id Sound ID
- * @param channel Channel index
+ * @brief Pause a sound on a specific channel or all channels
+ * @param sound_id Sound ID to pause
+ * @param channel Channel index (>= 0) to pause specific channel, or negative value to pause all channels
  */
 SLAPI void sl_sound_pause(sl_sound_id sound_id, int channel);
 
 /**
- * @brief Stop a sound on a specific channel
- * @param sound_id Sound ID
- * @param channel Channel index
+ * @brief Stop a sound on a specific channel or all channels
+ * @param sound_id Sound ID to stop
+ * @param channel Channel index (>= 0) to stop specific channel, or negative value to stop all channels
  */
 SLAPI void sl_sound_stop(sl_sound_id sound_id, int channel);
 
 /**
- * @brief Stop a sound on all channels
- * @param sound_id Sound ID
- */
-SLAPI void sl_sound_stop_all(sl_sound_id sound_id);
-
-/**
- * @brief Rewind a sound on a specific channel
- * @param sound_id Sound ID
- * @param channel Channel index
+ * @brief Rewind a sound on a specific channel or all channels
+ * @param sound_id Sound ID to rewind
+ * @param channel Channel index (>= 0) to rewind specific channel, or negative value to rewind all channels
  */
 SLAPI void sl_sound_rewind(sl_sound_id sound_id, int channel);
 
 /**
- * @brief Check if a sound is playing on a specific channel
- * @param sound_id Sound ID
- * @param channel Channel index
- * @return true if playing, false otherwise
+ * @brief Check if a sound is playing on a specific channel or any channel
+ * @param sound_id Sound ID to check
+ * @param channel Channel index (>= 0) to check specific channel, or negative value to check if playing on any channel
+ * @return true if sound is playing on the specified channel(s), false otherwise
  */
 SLAPI bool sl_sound_is_playing(sl_sound_id sound_id, int channel);
 
 /**
- * @brief Check if a sound is playing on any channel
- * @param sound_id Sound ID
- * @return true if playing on at least one channel
- */
-SLAPI bool sl_sound_is_playing_any(sl_sound_id sound_id);
-
-/**
  * @brief Get the number of channels assigned to a sound
  * @param sound_id Sound ID
- * @return Number of channels
+ * @return Number of channels, or 0 if sound ID is invalid
  */
 SLAPI int sl_sound_get_channel_count(sl_sound_id sound_id);
 
