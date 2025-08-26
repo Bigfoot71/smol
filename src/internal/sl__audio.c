@@ -287,7 +287,7 @@ void sl__audio_update_all_sound_volumes(void)
     for (size_t i = 0; i < sl__audio.reg_sounds.elements.count; i++) {
         if (((bool*)sl__audio.reg_sounds.valid_flags.data)[i]) {
             sl__sound_t* sound = &((sl__sound_t*)sl__audio.reg_sounds.elements.data)[i];
-            for (int j = 0; j < sound->channel_count; j++) {
+            for (int j = 0; j < sound->source_count; j++) {
                 alSourcef(sound->sources[j], AL_GAIN, final_volume);
             }
         }
@@ -305,7 +305,7 @@ void sl__audio_update_music_volume(sl_music_id music_id)
 
 /* === Sound Functions === */
 
-bool sl__sound_load_wav(sl__sound_t* sound, const void* data, size_t data_size)
+bool sl__sound_load_wav(sl__sound_raw_t* out, const void* data, size_t data_size)
 {
     drwav wav;
 
@@ -316,7 +316,7 @@ bool sl__sound_load_wav(sl__sound_t* sound, const void* data, size_t data_size)
 
     if (wav.channels == 1) {
         if (wav.bitsPerSample == 16) {
-            sound->format = AL_FORMAT_MONO16;
+            out->format = AL_FORMAT_MONO16;
         }
         else {
             sl_loge("AUDIO: Unsupported WAV format for mono audio (bits per sample: %u)", wav.bitsPerSample);
@@ -326,7 +326,7 @@ bool sl__sound_load_wav(sl__sound_t* sound, const void* data, size_t data_size)
     }
     else if (wav.channels == 2) {
         if (wav.bitsPerSample == 16) {
-            sound->format = AL_FORMAT_STEREO16;
+            out->format = AL_FORMAT_STEREO16;
         }
         else {
             sl_loge("AUDIO: Unsupported WAV format for stereo audio (bits per sample: %u)", wav.bitsPerSample);
@@ -359,15 +359,15 @@ bool sl__sound_load_wav(sl__sound_t* sound, const void* data, size_t data_size)
         return false;
     }
 
-    sound->sample_rate = wav.sampleRate;
-    sound->pcm_data_size = pcm_data_size;
-    sound->pcm_data = pcm_data;
+    out->sample_rate = wav.sampleRate;
+    out->pcm_data_size = pcm_data_size;
+    out->pcm_data = pcm_data;
 
     drwav_uninit(&wav);
     return true;
 }
 
-bool sl__sound_load_flac(sl__sound_t* sound, const void* data, size_t data_size)
+bool sl__sound_load_flac(sl__sound_raw_t* out, const void* data, size_t data_size)
 {
     drflac_uint32 channels;
     drflac_uint32 sample_rate;
@@ -388,10 +388,10 @@ bool sl__sound_load_flac(sl__sound_t* sound, const void* data, size_t data_size)
     }
 
     if (channels == 1) {
-        sound->format = AL_FORMAT_MONO16;
+        out->format = AL_FORMAT_MONO16;
     }
     else if (channels == 2) {
-        sound->format = AL_FORMAT_STEREO16;
+        out->format = AL_FORMAT_STEREO16;
     }
     else {
         sl_loge("AUDIO: Unsupported number of channels (%u) in FLAC file", channels);
@@ -399,14 +399,14 @@ bool sl__sound_load_flac(sl__sound_t* sound, const void* data, size_t data_size)
         return false;
     }
 
-    sound->sample_rate = sample_rate;
-    sound->pcm_data_size = total_pcm_frame_count * channels * sizeof(drflac_int16);
-    sound->pcm_data = pcm_data;
+    out->sample_rate = sample_rate;
+    out->pcm_data_size = total_pcm_frame_count * channels * sizeof(drflac_int16);
+    out->pcm_data = pcm_data;
 
     return true;
 }
 
-bool sl__sound_load_mp3(sl__sound_t* sound, const void* data, size_t data_size)
+bool sl__sound_load_mp3(sl__sound_raw_t* out, const void* data, size_t data_size)
 {
     drmp3_config config;
     drmp3_uint64 total_pcm_frame_count;
@@ -425,10 +425,10 @@ bool sl__sound_load_mp3(sl__sound_t* sound, const void* data, size_t data_size)
     }
 
     if (config.channels == 1) {
-        sound->format = AL_FORMAT_MONO16;
+        out->format = AL_FORMAT_MONO16;
     }
     else if (config.channels == 2) {
-        sound->format = AL_FORMAT_STEREO16;
+        out->format = AL_FORMAT_STEREO16;
     }
     else {
         sl_loge("AUDIO: Unsupported number of channels (%u) in MP3 file", config.channels);
@@ -436,14 +436,14 @@ bool sl__sound_load_mp3(sl__sound_t* sound, const void* data, size_t data_size)
         return false;
     }
 
-    sound->sample_rate = config.sampleRate;
-    sound->pcm_data_size = total_pcm_frame_count * config.channels * sizeof(drmp3_int16);
-    sound->pcm_data = pcm_data;
+    out->sample_rate = config.sampleRate;
+    out->pcm_data_size = total_pcm_frame_count * config.channels * sizeof(drmp3_int16);
+    out->pcm_data = pcm_data;
 
     return true;
 }
 
-bool sl__sound_load_ogg(sl__sound_t* sound, const void* data, size_t data_size)
+bool sl__sound_load_ogg(sl__sound_raw_t* out, const void* data, size_t data_size)
 {
     int channels = 0;
     int sample_rate = 0;
@@ -463,10 +463,10 @@ bool sl__sound_load_ogg(sl__sound_t* sound, const void* data, size_t data_size)
     }
 
     if (channels == 1) {
-        sound->format = AL_FORMAT_MONO16;
+        out->format = AL_FORMAT_MONO16;
     }
     else if (channels == 2) {
-        sound->format = AL_FORMAT_STEREO16;
+        out->format = AL_FORMAT_STEREO16;
     }
     else {
         sl_loge("AUDIO: Unsupported number of channels (%d) in OGG file", channels);
@@ -474,9 +474,9 @@ bool sl__sound_load_ogg(sl__sound_t* sound, const void* data, size_t data_size)
         return false;
     }
 
-    sound->sample_rate = sample_rate;
-    sound->pcm_data_size = total_samples * channels * sizeof(short);
-    sound->pcm_data = pcm_data;
+    out->sample_rate = sample_rate;
+    out->pcm_data_size = total_samples * channels * sizeof(short);
+    out->pcm_data = pcm_data;
 
     return true;
 }
@@ -957,33 +957,4 @@ void sl__music_prepare_buffers(sl__music_t* music)
         alSourceQueueBuffers(music->source, 1, &music->buffers[i]);
         music->decoder.current_sample += sample_read;
     }
-}
-
-void sl__music_switch_to(sl_music_id music_id)
-{
-    if (!sl__audio.music_thread_initialized) {
-        return;
-    }
-
-    SDL_LockMutex(sl__audio.music_mutex);
-
-    /* --- Stop current music if any and different from the new one --- */
-
-    if (sl__audio.current_music != 0 && sl__audio.current_music != music_id) {
-        sl__music_t* current = sl__registry_get(&sl__audio.reg_musics, sl__audio.current_music);
-        if (current) {
-            alSourceStop(current->source);
-            sl__music_unqueue_all_buffers(current);
-        }
-    }
-
-    /* --- Switch to new music --- */
-
-    sl__audio.current_music = music_id;
-
-    /* --- Wake up the streaming thread --- */
-
-    SDL_SignalCondition(sl__audio.music_condition);
-
-    SDL_UnlockMutex(sl__audio.music_mutex);
 }

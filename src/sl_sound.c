@@ -48,6 +48,8 @@ sl_sound_id sl_sound_load(const char* file_path, int channel_count)
 
     /* --- Decode all sound data --- */
 
+    sl__sound_raw_t raw = { 0 };
+
     switch (sl__audio_get_format(file_data, file_size))
     {
     case SL__AUDIO_UNKNOWN:
@@ -55,28 +57,28 @@ sl_sound_id sl_sound_load(const char* file_path, int channel_count)
         SDL_free(file_data);
         return 0;
     case SL__AUDIO_WAV:
-        if (!sl__sound_load_wav(&sound, file_data, file_size)) {
+        if (!sl__sound_load_wav(&raw, file_data, file_size)) {
             sl_loge("AUDIO: Failed to load sound; Unable to load WAV file '%s'", file_path);
             SDL_free(file_data);
             return 0;
         }
         break;
     case SL__AUDIO_FLAC:
-        if (!sl__sound_load_flac(&sound, file_data, file_size)) {
+        if (!sl__sound_load_flac(&raw, file_data, file_size)) {
             sl_loge("AUDIO: Failed to load sound; Unable to decode FLAC file '%s'", file_path);
             SDL_free(file_data);
             return 0;
         }
         break;
     case SL__AUDIO_MP3:
-        if (!sl__sound_load_mp3(&sound, file_data, file_size)) {
+        if (!sl__sound_load_mp3(&raw, file_data, file_size)) {
             sl_loge("AUDIO: Failed to load sound; Unable to decode MP3 file '%s'", file_path);
             SDL_free(file_data);
             return 0;
         }
         break;
     case SL__AUDIO_OGG:
-        if (!sl__sound_load_ogg(&sound, file_data, file_size)) {
+        if (!sl__sound_load_ogg(&raw, file_data, file_size)) {
             sl_loge("AUDIO: Failed to load sound; Unable to decode OGG file '%s'", file_path);
             SDL_free(file_data);
             return 0;
@@ -91,39 +93,31 @@ sl_sound_id sl_sound_load(const char* file_path, int channel_count)
     alGenBuffers(1, &sound.buffer);
     if (alGetError() != AL_NO_ERROR) {
         sl_loge("AUDIO: Failed to load sound; Could not generate OpenAL buffer");
-        SDL_free(sound.pcm_data);
+        SDL_free(raw.pcm_data);
         return 0;
     }
 
     /* --- Load data into the OpenAL buffer --- */
 
-    alBufferData(sound.buffer, sound.format, sound.pcm_data, sound.pcm_data_size, sound.sample_rate);
+    alBufferData(sound.buffer, raw.format, raw.pcm_data, raw.pcm_data_size, raw.sample_rate);
     if (alGetError() != AL_NO_ERROR) {
         sl_loge("AUDIO: Failed to load sound; Could not buffer data to OpenAL");
         alDeleteBuffers(1, &sound.buffer);
-        SDL_free(sound.pcm_data);
+        SDL_free(raw.pcm_data);
         return 0;
     }
 
     /* --- Allocate arrays for channels --- */
 
-    sound.channel_count = channel_count;
+    sound.source_count = channel_count;
     sound.sources = SDL_malloc(channel_count * sizeof(ALuint));
-    sound.channel_in_use = (bool*)SDL_malloc(channel_count * sizeof(bool));
-    
-    if (!sound.sources || !sound.channel_in_use) {
+
+    if (!sound.sources) {
         sl_loge("AUDIO: Failed to load sound; Could not allocate memory for channels");
         alDeleteBuffers(1, &sound.buffer);
-        SDL_free(sound.pcm_data);
+        SDL_free(raw.pcm_data);
         if (sound.sources) SDL_free(sound.sources);
-        if (sound.channel_in_use) SDL_free(sound.channel_in_use);
         return 0;
-    }
-
-    /* --- Initialize all channels as not in use --- */
-
-    for (int i = 0; i < channel_count; i++) {
-        sound.channel_in_use[i] = false;
     }
 
     /* --- Create all OpenAL sources --- */
@@ -132,9 +126,8 @@ sl_sound_id sl_sound_load(const char* file_path, int channel_count)
     if (alGetError() != AL_NO_ERROR) {
         sl_loge("AUDIO: Failed to load sound; Could not generate OpenAL sources");
         alDeleteBuffers(1, &sound.buffer);
-        SDL_free(sound.pcm_data);
+        SDL_free(raw.pcm_data);
         SDL_free(sound.sources);
-        SDL_free(sound.channel_in_use);
         return 0;
     }
 
@@ -151,9 +144,8 @@ sl_sound_id sl_sound_load(const char* file_path, int channel_count)
                 }
             }
             alDeleteBuffers(1, &sound.buffer);
-            SDL_free(sound.pcm_data);
+            SDL_free(raw.pcm_data);
             SDL_free(sound.sources);
-            SDL_free(sound.channel_in_use);
             return 0;
         }
         
@@ -172,7 +164,7 @@ void sl_sound_destroy(sl_sound_id sound_id)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return;
 
-    for (int i = 0; i < sound->channel_count; i++) {
+    for (int i = 0; i < sound->source_count; i++) {
         if (alIsSource(sound->sources[i])) {
             ALint state;
             alGetSourcei(sound->sources[i], AL_SOURCE_STATE, &state);
@@ -187,16 +179,8 @@ void sl_sound_destroy(sl_sound_id sound_id)
         alDeleteBuffers(1, &sound->buffer);
     }
 
-    if (sound->pcm_data) {
-        SDL_free(sound->pcm_data);
-    }
-
     if (sound->sources) {
         SDL_free(sound->sources);
-    }
-
-    if (sound->channel_in_use) {
-        SDL_free(sound->channel_in_use);
     }
 
     sl__registry_remove(&sl__audio.reg_sounds, sound_id);
@@ -207,8 +191,8 @@ void sl_sound_play(sl_sound_id sound_id, int channel)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return;
 
-    if (channel < 0 || channel >= sound->channel_count) {
-        sl_loge("AUDIO: Invalid channel %d for sound (max: %d)", channel, sound->channel_count - 1);
+    if (channel < 0 || channel >= sound->source_count) {
+        sl_loge("AUDIO: Invalid channel %d for sound (max: %d)", channel, sound->source_count - 1);
         return;
     }
 
@@ -224,7 +208,6 @@ void sl_sound_play(sl_sound_id sound_id, int channel)
     /* --- Play the sound on the specified channel --- */
 
     alSourcePlay(sound->sources[channel]);
-    sound->channel_in_use[channel] = true;
     
     /* --- Apply current volume settings --- */
 
@@ -237,7 +220,7 @@ int sl_sound_play_auto(sl_sound_id sound_id)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return -1;
 
-    for (int i = 0; i < sound->channel_count; i++) {
+    for (int i = 0; i < sound->source_count; i++) {
         ALint state;
         alGetSourcei(sound->sources[i], AL_SOURCE_STATE, &state);
         if (state != AL_PLAYING) {
@@ -247,7 +230,6 @@ int sl_sound_play_auto(sl_sound_id sound_id)
             float final_volume = sl__audio_calculate_final_sound_volume();
             alSourcef(sound->sources[i], AL_GAIN, final_volume);
             alSourcePlay(sound->sources[i]);
-            sound->channel_in_use[i] = true;
             return i;
         }
     }
@@ -260,7 +242,7 @@ void sl_sound_pause(sl_sound_id sound_id, int channel)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return;
 
-    if (channel < 0 || channel >= sound->channel_count) {
+    if (channel < 0 || channel >= sound->source_count) {
         return;
     }
 
@@ -272,12 +254,11 @@ void sl_sound_stop(sl_sound_id sound_id, int channel)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return;
 
-    if (channel < 0 || channel >= sound->channel_count) {
+    if (channel < 0 || channel >= sound->source_count) {
         return;
     }
 
     alSourceStop(sound->sources[channel]);
-    sound->channel_in_use[channel] = false;
 }
 
 void sl_sound_stop_all(sl_sound_id sound_id)
@@ -285,9 +266,8 @@ void sl_sound_stop_all(sl_sound_id sound_id)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return;
 
-    for (int i = 0; i < sound->channel_count; i++) {
+    for (int i = 0; i < sound->source_count; i++) {
         alSourceStop(sound->sources[i]);
-        sound->channel_in_use[i] = false;
     }
 }
 
@@ -296,7 +276,7 @@ void sl_sound_rewind(sl_sound_id sound_id, int channel)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return;
 
-    if (channel < 0 || channel >= sound->channel_count) {
+    if (channel < 0 || channel >= sound->source_count) {
         return;
     }
 
@@ -308,7 +288,7 @@ bool sl_sound_is_playing(sl_sound_id sound_id, int channel)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return false;
 
-    if (channel < 0 || channel >= sound->channel_count) {
+    if (channel < 0 || channel >= sound->source_count) {
         return false;
     }
 
@@ -322,7 +302,7 @@ bool sl_sound_is_playing_any(sl_sound_id sound_id)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return false;
 
-    for (int i = 0; i < sound->channel_count; i++) {
+    for (int i = 0; i < sound->source_count; i++) {
         ALint state;
         alGetSourcei(sound->sources[i], AL_SOURCE_STATE, &state);
         if (state == AL_PLAYING) {
@@ -337,5 +317,5 @@ int sl_sound_get_channel_count(sl_sound_id sound_id)
     sl__sound_t* sound = sl__registry_get(&sl__audio.reg_sounds, sound_id);
     if (sound == NULL) return 0;
 
-    return sound->channel_count;
+    return sound->source_count;
 }

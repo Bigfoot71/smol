@@ -47,14 +47,16 @@ typedef enum {
 /* === Internal Structs === */
 
 typedef struct {
-    ALuint buffer;
-    ALuint* sources;
-    bool* channel_in_use;
-    int channel_count;
     ALenum format;
     size_t sample_rate;
     size_t pcm_data_size;
     void* pcm_data;
+} sl__sound_raw_t;
+
+typedef struct {
+    ALuint buffer;
+    ALuint* sources;
+    int source_count;
 } sl__sound_t;
 
 typedef struct {
@@ -138,10 +140,10 @@ void sl__audio_update_music_volume(sl_music_id music_id);
 
 /* === Sound Functions === */
 
-bool sl__sound_load_wav(sl__sound_t* sound, const void* data, size_t data_size);
-bool sl__sound_load_flac(sl__sound_t* sound, const void* data, size_t data_size);
-bool sl__sound_load_mp3(sl__sound_t* sound, const void* data, size_t data_size);
-bool sl__sound_load_ogg(sl__sound_t* sound, const void* data, size_t data_size);
+bool sl__sound_load_wav(sl__sound_raw_t* out, const void* data, size_t data_size);
+bool sl__sound_load_flac(sl__sound_raw_t* out, const void* data, size_t data_size);
+bool sl__sound_load_mp3(sl__sound_raw_t* out, const void* data, size_t data_size);
+bool sl__sound_load_ogg(sl__sound_raw_t* out, const void* data, size_t data_size);
 
 /* === Stream Decoder Functions === */
 
