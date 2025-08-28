@@ -54,7 +54,7 @@ extern struct sl__core {
 
 /* === Module Functions === */
 
-bool sl__core_init(const char* title, int w, int h, sl_flags_t flags);
+bool sl__core_init(const char* title, int w, int h, const sl_app_desc_t* flags);
 void sl__core_quit(void);
 
 #endif // SL__CORE_H

@@ -391,7 +391,24 @@ typedef enum sl_font_type {
     SL_FONT_SDF,                ///< Signed Distance Field (needs a custom shader)
 } sl_font_type_t;
 
-/* === Structs === */
+/* === Structures === */
+
+typedef struct sl_app_desc {
+
+    sl_flags_t flags;
+
+    const char* name;
+    const char* version;
+    const char* identifier;
+
+    struct {
+        void*(*malloc)(size_t size);
+        void*(*calloc)(size_t nmemb, size_t size);
+        void*(*realloc)(void *mem, size_t size);
+        void(*free)(void *mem);
+    } memory;
+
+} sl_app_desc_t;
 
 typedef union sl_vec2 {
     struct { float x, y; };
@@ -454,13 +471,6 @@ typedef uint32_t sl_font_id;
 
 typedef uint32_t sl_sound_id;
 typedef uint32_t sl_music_id;
-
-/* === Types === */
-
-typedef void *(*sl_malloc_func)(size_t size);
-typedef void *(*sl_calloc_func)(size_t nmemb, size_t size);
-typedef void *(*sl_realloc_func)(void *mem, size_t size);
-typedef void (*sl_free_func)(void *mem);
 
 /* === Macros === */
 
@@ -586,8 +596,41 @@ extern "C" {
  * @{
  */
 
-/** Initialize the library with a window title, size, and flags */
+/**
+ * @brief Initialize the Smol library with a window.
+ *
+ * This function initializes the Smol library, creating a window with
+ * the specified title, width, height, and configuration flags. Must be
+ * called before any other Smol functions.
+ *
+ * @param title The title of the window. Must not be NULL.
+ * @param w Width of the window in pixels.
+ * @param h Height of the window in pixels.
+ * @param flags Configuration flags for initialization (sl_flags_t). Can be zero.
+ * @return Returns true if the library initialized successfully, false otherwise.
+ *         If initialization fails, the reason will be logged.
+ */
 SLAPI bool sl_init(const char* title, int w, int h, sl_flags_t flags);
+
+/**
+ * @brief Initialize the Smol library with extended application description.
+ *
+ * This function initializes the Smol library with more detailed
+ * information about your application. It creates a window and configures
+ * the library according to the provided application description.
+ *
+ * @param title The title of the window. Must not be NULL.
+ * @param w Width of the window in pixels.
+ * @param h Height of the window in pixels.
+ * @param desc Pointer to an sl_app_desc_t structure describing your application.
+ *             Must not be NULL, but individual fields can be zero if not needed.
+ * @return Returns true if Smol initialized successfully, false otherwise.
+ *         If initialization fails, the reason will be written to the logs.
+ *
+ * @note The sl_app_desc_t structure itself must be valid (non-NULL).
+ *       Fields that are not used can be set to zero.
+ */
+SLAPI bool sl_init_ex(const char* title, int w, int h, const sl_app_desc_t* desc);
 
 /** Shut down the library and cleanup resources */
 SLAPI void sl_quit(void);
@@ -595,9 +638,9 @@ SLAPI void sl_quit(void);
 /**
  * Run one iteration of the main loop
  * @return false if the program should close
- * @note Can be used directly in the main loop: `while (sl_run())`
+ * @note Can be used directly in the main loop: `while (sl_frame_step())`
  */
-SLAPI bool sl_run(void);
+SLAPI bool sl_frame_step(void);
 
 /* --- Time --- */
 
@@ -811,14 +854,6 @@ SLAPI void sl_loge(const char* msg, ...);
 SLAPI void sl_logf(const char* msg, ...);
 
 /* --- Memory --- */
-
-/**
- * Replace default memory allocation functions with custom ones.
- * @note Should be called first, ideally at program startup.
- * @warning Do not call after any allocations: sl_free will use the new allocator even for blocks from the old one.
- */
-SLAPI void sl_memory_functions(sl_malloc_func malloc_func, sl_calloc_func calloc_func,
-                               sl_realloc_func realloc_func, sl_free_func free_func);
 
 /** 
  * Allocates a memory block of the given size. 

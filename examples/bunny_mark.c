@@ -25,7 +25,7 @@ int main(void)
 
     sl_render_blend(SL_BLEND_ALPHA);
 
-    while (sl_run())
+    while (sl_frame_step())
     {
         sl_window_set_title(sl_text_format("Smol - Bunny Mark Example - Count: %i - FPS: %i", wabbit_count, sl_frame_per_second()));
 

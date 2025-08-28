@@ -64,7 +64,7 @@ int main(void)
     sl_render_depth_test(true);
     sl_render_cull_face(SL_CULL_BACK);
 
-    while (sl_run())
+    while (sl_frame_step())
     {
         sl_render_push();
         sl_render_rotate(SL_VEC3(0, sl_time(), sl_time()));

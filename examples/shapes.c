@@ -5,7 +5,7 @@ int main(void)
     sl_init("Smol - Shapes Example", 640, 480, SL_FLAG_MSAA_X4 | SL_FLAG_WINDOW_RESIZABLE);
     sl_frame_target(60);
 
-    while (sl_run())
+    while (sl_frame_step())
     {
         sl_vec2_t size = sl_window_get_size();
 

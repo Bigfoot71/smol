@@ -30,14 +30,17 @@ struct sl__core sl__core = { 0 };
 
 /* === Module Functions === */
 
-bool sl__core_init(const char* title, int w, int h, sl_flags_t flags)
+bool sl__core_init(const char* title, int w, int h, const sl_app_desc_t* desc)
 {
-    /* --- Init SDL stuff --- */
+    /* --- Defines custom memory functions --- */
 
-    if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
-        sl_loge("CORE: Failed to init video subsystem; %s", SDL_GetError());
-        return false;
+    if (!SDL_SetMemoryFunctions(desc->memory.malloc, desc->memory.calloc, desc->memory.realloc, desc->memory.free)) {
+        sl_logw("CORE: Failed to set custom memory functions; %s", SDL_GetError());
     }
+
+    /* --- Init app metadata --- */
+
+    SDL_SetAppMetadata(desc->name, desc->version, desc->identifier);
 
     /* --- Configure log system --- */
 
@@ -52,6 +55,13 @@ bool sl__core_init(const char* title, int w, int h, sl_flags_t flags)
 #ifndef NDEBUG
     SDL_SetLogPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_DEBUG);
 #endif
+
+    /* --- Init SDL stuff --- */
+
+    if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
+        sl_loge("CORE: Failed to init video subsystem; %s", SDL_GetError());
+        return false;
+    }
 
     /* --- Define OpenGL attributes --- */
 
@@ -69,7 +79,7 @@ bool sl__core_init(const char* title, int w, int h, sl_flags_t flags)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-    if (flags & SL_FLAG_MSAA_X4) {
+    if (desc->flags & SL_FLAG_MSAA_X4) {
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     }
@@ -77,23 +87,23 @@ bool sl__core_init(const char* title, int w, int h, sl_flags_t flags)
     /* --- Create the SDL window --- */
 
     SDL_WindowFlags windowFlags = 0;
-    if (flags & SL_FLAG_FULLSCREEN) windowFlags |= SDL_WINDOW_FULLSCREEN;
-    if (flags & SL_FLAG_WINDOW_OCCLUDED) windowFlags |= SDL_WINDOW_OCCLUDED;
-    if (flags & SL_FLAG_WINDOW_HIDDEN) windowFlags |= SDL_WINDOW_HIDDEN;
-    if (flags & SL_FLAG_WINDOW_BORDERLESS) windowFlags |= SDL_WINDOW_BORDERLESS;
-    if (flags & SL_FLAG_WINDOW_RESIZABLE) windowFlags |= SDL_WINDOW_RESIZABLE;
-    if (flags & SL_FLAG_WINDOW_MINIMIZED) windowFlags |= SDL_WINDOW_MINIMIZED;
-    if (flags & SL_FLAG_WINDOW_MAXIMIZED) windowFlags |= SDL_WINDOW_MAXIMIZED;
-    if (flags & SL_FLAG_WINDOW_TOPMOST) windowFlags |= SDL_WINDOW_ALWAYS_ON_TOP;
-    if (flags & SL_FLAG_WINDOW_TRANSPARENT) windowFlags |= SDL_WINDOW_TRANSPARENT;
-    if (flags & SL_FLAG_WINDOW_NOT_FOCUSABLE) windowFlags |= SDL_WINDOW_NOT_FOCUSABLE;
-    if (flags & SL_FLAG_MOUSE_GRABBED) windowFlags |= SDL_WINDOW_MOUSE_GRABBED;
-    if (flags & SL_FLAG_MOUSE_CAPTURE) windowFlags |= SDL_WINDOW_MOUSE_CAPTURE;
-    if (flags & SL_FLAG_MOUSE_RELATIVE) windowFlags |= SDL_WINDOW_MOUSE_RELATIVE_MODE;
-    if (flags & SL_FLAG_MOUSE_FOCUS) windowFlags |= SDL_WINDOW_MOUSE_FOCUS;
-    if (flags & SL_FLAG_INPUT_FOCUS) windowFlags |= SDL_WINDOW_INPUT_FOCUS;
-    if (flags & SL_FLAG_KEYBOARD_GRABBED) windowFlags |= SDL_WINDOW_KEYBOARD_GRABBED;
-    if (flags & SL_FLAG_HIGH_PIXEL_DENSITY) windowFlags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
+    if (desc->flags & SL_FLAG_FULLSCREEN) windowFlags |= SDL_WINDOW_FULLSCREEN;
+    if (desc->flags & SL_FLAG_WINDOW_OCCLUDED) windowFlags |= SDL_WINDOW_OCCLUDED;
+    if (desc->flags & SL_FLAG_WINDOW_HIDDEN) windowFlags |= SDL_WINDOW_HIDDEN;
+    if (desc->flags & SL_FLAG_WINDOW_BORDERLESS) windowFlags |= SDL_WINDOW_BORDERLESS;
+    if (desc->flags & SL_FLAG_WINDOW_RESIZABLE) windowFlags |= SDL_WINDOW_RESIZABLE;
+    if (desc->flags & SL_FLAG_WINDOW_MINIMIZED) windowFlags |= SDL_WINDOW_MINIMIZED;
+    if (desc->flags & SL_FLAG_WINDOW_MAXIMIZED) windowFlags |= SDL_WINDOW_MAXIMIZED;
+    if (desc->flags & SL_FLAG_WINDOW_TOPMOST) windowFlags |= SDL_WINDOW_ALWAYS_ON_TOP;
+    if (desc->flags & SL_FLAG_WINDOW_TRANSPARENT) windowFlags |= SDL_WINDOW_TRANSPARENT;
+    if (desc->flags & SL_FLAG_WINDOW_NOT_FOCUSABLE) windowFlags |= SDL_WINDOW_NOT_FOCUSABLE;
+    if (desc->flags & SL_FLAG_MOUSE_GRABBED) windowFlags |= SDL_WINDOW_MOUSE_GRABBED;
+    if (desc->flags & SL_FLAG_MOUSE_CAPTURE) windowFlags |= SDL_WINDOW_MOUSE_CAPTURE;
+    if (desc->flags & SL_FLAG_MOUSE_RELATIVE) windowFlags |= SDL_WINDOW_MOUSE_RELATIVE_MODE;
+    if (desc->flags & SL_FLAG_MOUSE_FOCUS) windowFlags |= SDL_WINDOW_MOUSE_FOCUS;
+    if (desc->flags & SL_FLAG_INPUT_FOCUS) windowFlags |= SDL_WINDOW_INPUT_FOCUS;
+    if (desc->flags & SL_FLAG_KEYBOARD_GRABBED) windowFlags |= SDL_WINDOW_KEYBOARD_GRABBED;
+    if (desc->flags & SL_FLAG_HIGH_PIXEL_DENSITY) windowFlags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
     sl__core.window = SDL_CreateWindow(title, w, h, SDL_WINDOW_OPENGL | windowFlags);
     if (!sl__core.window) {

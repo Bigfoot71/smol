@@ -13,7 +13,7 @@ int main(void)
     int loc_time = sl_shader_uniform(shader, "u_time");
     sl_render_shader(shader);
 
-    while (sl_run()) {
+    while (sl_frame_step()) {
         sl_render_uniform1f(loc_time, sl_time());
         sl_render_rectangle(0, 0, WIN_W, WIN_H);
         sl_render_present();

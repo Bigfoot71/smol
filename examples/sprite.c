@@ -83,7 +83,7 @@ int main(void)
 
     sl_render_blend(SL_BLEND_ALPHA);
 
-    while (sl_run())
+    while (sl_frame_step())
     {
         sl_render_clear(SL_DARK_GRAY);
         draw_sprite_ex(sprite, 5.0f * sl_time(), WIN_W * 0.5f, WIN_H * 0.5f, 0.0f, 16.0f);

@@ -14,7 +14,7 @@ int main(void)
 
     sl_render_blend(SL_BLEND_ALPHA);
 
-    while (sl_run())
+    while (sl_frame_step())
     {
         sl_render_clear(SL_DARK_GRAY);
 

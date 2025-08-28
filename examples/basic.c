@@ -15,7 +15,7 @@ int main(void)
 
     const float radius = 32.0f;
 
-    while (sl_run())
+    while (sl_frame_step())
     {
         float dt = sl_frame_time();
 

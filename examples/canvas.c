@@ -17,7 +17,7 @@ int main(void)
     sl_shader_id shader = sl_shader_load(RESOURCES_PATH "raymarch.glsl");
     int loc_time = sl_shader_uniform(shader, "u_time");
 
-    while (sl_run()) {
+    while (sl_frame_step()) {
         sl_render_canvas(canvas);
         {
             sl_render_sampler(0, 0);

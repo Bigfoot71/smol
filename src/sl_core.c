@@ -35,6 +35,26 @@
 
 bool sl_init(const char* title, int w, int h, sl_flags_t flags)
 {
+    sl_app_desc_t desc = {
+        .flags = flags,
+        .name = NULL,
+        .version = NULL,
+        .identifier = NULL,
+        .memory = {}
+    };
+
+    return sl_init_ex(title, w, h, &desc);
+}
+
+bool sl_init_ex(const char* title, int w, int h, const sl_app_desc_t* desc)
+{
+    /* --- Ensures that the application description is valid --- */
+
+    if (desc == NULL) {
+        sl_loge("CORE: Failed to initialize Hyperion; App description cannot be null");
+        return false;
+    }
+
     /* --- Fill global states with zeroes --- */
 
     SDL_memset(&sl__render, 0, sizeof(sl__render));
@@ -43,7 +63,7 @@ bool sl_init(const char* title, int w, int h, sl_flags_t flags)
 
     /* --- Init each modules --- */
 
-    if (!sl__core_init(title, w, h, flags)) {
+    if (!sl__core_init(title, w, h, desc)) {
         return false;
     }
 
@@ -77,7 +97,7 @@ void sl_quit(void)
     sl__core_quit();
 }
 
-bool sl_run(void)
+bool sl_frame_step(void)
 {
     bool should_run = true;
 
@@ -652,13 +672,6 @@ void sl_logf(const char* msg, ...)
     va_start(args, msg);
     SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_CRITICAL, msg, args);
     va_end(args);
-}
-
-void sl_memory_functions(sl_malloc_func malloc_func, sl_calloc_func calloc_func, sl_realloc_func realloc_func, sl_free_func free_func)
-{
-    if (!SDL_SetMemoryFunctions(malloc_func, calloc_func, realloc_func, free_func)) {
-        sl_logw("CORE: Failed to set custom memory functions; %s", SDL_GetError());
-    }
 }
 
 void* sl_malloc(size_t size)

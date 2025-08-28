@@ -118,7 +118,7 @@ int main(void)
 
     init();
 
-    while (sl_run()) {
+    while (sl_frame_step()) {
         if (sl_key_just_pressed(SL_KEY_ESCAPE)) break;
         update();
         render();

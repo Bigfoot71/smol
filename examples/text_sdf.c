@@ -14,7 +14,7 @@ int main(void)
     sl_shader_id shader = sl_shader_load(RESOURCES_PATH "text_sdf.glsl");
     sl_render_shader(shader);
 
-    while (sl_run())
+    while (sl_frame_step())
     {
         sl_render_clear(SL_DARK_GRAY);
 

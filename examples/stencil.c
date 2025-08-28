@@ -8,7 +8,7 @@ int main(void)
     sl_init("Smol - Stencil Example", WIN_W, WIN_H, 0);
     sl_frame_target(60);
 
-    while (sl_run())
+    while (sl_frame_step())
     {
         sl_render_clear(SL_BLACK);
 

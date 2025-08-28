@@ -13,7 +13,7 @@ int main(void)
     sl_font_id font = sl_font_load(RESOURCES_PATH "font.ttf", SL_FONT_BITMAP, 64, 0, 0);
     sl_render_font(font);
 
-    while (sl_run())
+    while (sl_frame_step())
     {
         sl_render_clear(SL_DARK_GRAY);
 

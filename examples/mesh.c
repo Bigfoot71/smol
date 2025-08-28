@@ -17,7 +17,7 @@ int main(void)
 
     sl_mesh_id mesh = sl_mesh_create(triangle, 3, NULL, 0);
 
-    while (sl_run()) {
+    while (sl_frame_step()) {
         sl_render_clear(SL_BLACK);
         sl_render_color(SL_RED);
         sl_render_mesh(mesh, 3);
