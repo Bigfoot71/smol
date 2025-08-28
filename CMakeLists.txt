@@ -127,16 +127,10 @@ endif()
 
 target_sources(${PROJECT_NAME} PRIVATE $<TARGET_OBJECTS:SDL3-static>)
 
-# Adding GLES2 to Smol
+# Adding Glad to Smol
 
 target_sources(${PROJECT_NAME} PRIVATE external/glad/src/gles2.c)
 target_include_directories(${PROJECT_NAME} PRIVATE external/glad/include)
-
-if(UNIX)
-    find_library(EGL_LIB EGL REQUIRED)
-    find_library(GLES2_LIB GLESv2 REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${EGL_LIB} ${GLES2_LIB})
-endif()
 
 # Adding mojoAL to Smol
 
