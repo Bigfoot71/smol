@@ -34,8 +34,13 @@ bool sl__core_init(const char* title, int w, int h, const sl_app_desc_t* desc)
 {
     /* --- Defines custom memory functions --- */
 
-    if (!SDL_SetMemoryFunctions(desc->memory.malloc, desc->memory.calloc, desc->memory.realloc, desc->memory.free)) {
-        sl_logw("CORE: Failed to set custom memory functions; %s", SDL_GetError());
+    if (desc->memory.malloc && desc->memory.calloc && desc->memory.realloc && desc->memory.free) {
+        if (!SDL_SetMemoryFunctions(desc->memory.malloc, desc->memory.calloc, desc->memory.realloc, desc->memory.free)) {
+            sl_logw("CORE: Failed to set custom memory functions; %s", SDL_GetError());
+        }
+    }
+    else if (desc->memory.malloc || desc->memory.calloc || desc->memory.realloc || desc->memory.free) {
+        sl_logw("CORE: Failed to set custom memory functions; If you define at least one memory function, they must all be defined", SDL_GetError());
     }
 
     /* --- Init app metadata --- */
