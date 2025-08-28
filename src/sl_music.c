@@ -67,9 +67,6 @@ sl_music_id sl_music_load(const char* file_path)
     if (alGetError() != AL_NO_ERROR) {
         sl_loge("AUDIO: Failed to generate OpenAL buffers for music");
         music.decoder.close_func(music.decoder.handle);
-        if (music.decoder.data_buffer) {
-            SDL_free(music.decoder.data_buffer);
-        }
         return 0;
     }
 
@@ -80,9 +77,6 @@ sl_music_id sl_music_load(const char* file_path)
         sl_loge("AUDIO: Failed to generate OpenAL source for music");
         alDeleteBuffers(SL__MUSIC_BUFFER_COUNT, music.buffers);
         music.decoder.close_func(music.decoder.handle);
-        if (music.decoder.data_buffer) {
-            SDL_free(music.decoder.data_buffer);
-        }
         return 0;
     }
 
@@ -95,9 +89,6 @@ sl_music_id sl_music_load(const char* file_path)
         alDeleteSources(1, &music.source);
         alDeleteBuffers(SL__MUSIC_BUFFER_COUNT, music.buffers);
         music.decoder.close_func(music.decoder.handle);
-        if (music.decoder.data_buffer) {
-            SDL_free(music.decoder.data_buffer);
-        }
         return 0;
     }
 
@@ -123,9 +114,6 @@ sl_music_id sl_music_load(const char* file_path)
         alDeleteBuffers(SL__MUSIC_BUFFER_COUNT, music.buffers);
         SDL_free(music.temp_buffer);
         music.decoder.close_func(music.decoder.handle);
-        if (music.decoder.data_buffer) {
-            SDL_free(music.decoder.data_buffer);
-        }
         return 0;
     }
 
@@ -169,11 +157,6 @@ void sl_music_destroy(sl_music_id music)
     if (data->decoder.handle) {
         data->decoder.close_func(data->decoder.handle);
         data->decoder.handle = NULL;
-    }
-
-    if (data->decoder.data_buffer) {
-        SDL_free(data->decoder.data_buffer);
-        data->decoder.data_buffer = NULL;
     }
 
     /* --- Clean up temporary buffer --- */

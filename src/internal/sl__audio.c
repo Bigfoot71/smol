@@ -585,7 +585,6 @@ bool sl__decoder_init(sl__decoder_t* decoder, const void* data, size_t data_size
             decoder->decode_func = sl__decoder_wav_decode_samples;
             decoder->seek_func = sl__decoder_wav_seek_sample;
             decoder->close_func = sl__decoder_wav_close;
-            decoder->data_buffer = dataCopy;
         }
         break;
     case SL__AUDIO_FLAC:
@@ -603,7 +602,6 @@ bool sl__decoder_init(sl__decoder_t* decoder, const void* data, size_t data_size
             decoder->decode_func = sl__decoder_flac_decode_samples;
             decoder->seek_func = sl__decoder_flac_seek_sample;
             decoder->close_func = sl__decoder_flac_close;
-            decoder->data_buffer = dataCopy;
         }
         break;
         
@@ -623,7 +621,6 @@ bool sl__decoder_init(sl__decoder_t* decoder, const void* data, size_t data_size
             decoder->decode_func = sl__decoder_mp3_decode_samples;
             decoder->seek_func = sl__decoder_mp3_seek_sample;
             decoder->close_func = sl__decoder_mp3_close;
-            decoder->data_buffer = dataCopy;
         }
         break;
         
@@ -643,7 +640,6 @@ bool sl__decoder_init(sl__decoder_t* decoder, const void* data, size_t data_size
             decoder->decode_func = sl__decoder_ogg_decode_samples;
             decoder->seek_func = sl__decoder_ogg_seek_sample;
             decoder->close_func = sl__decoder_ogg_close;
-            decoder->data_buffer = dataCopy;
         }
         break;
         

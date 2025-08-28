@@ -68,7 +68,6 @@ typedef struct {
     size_t total_samples;
     size_t current_sample;
     bool is_finished;
-    void* data_buffer;
 
     size_t(*decode_func)(void* handle, void* buffer, size_t samples);
     void (*seek_func)(void* handle, size_t sample);
