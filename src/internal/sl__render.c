@@ -48,6 +48,9 @@ bool sl__render_init(int w, int h)
     sl__render.matrix_normal = SL_MAT4_IDENTITY;
     sl__render.matrix_view = SL_MAT4_IDENTITY;
 
+    sl__render.transform_is_identity = true;
+    sl__render.texture_is_identity = true;
+
     /* --- Create batch buffers --- */
 
     glGenBuffers(1, &sl__render.vbo);

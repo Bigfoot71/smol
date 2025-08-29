@@ -20,6 +20,7 @@
 #include <smol.h>
 
 #include <SDL3/SDL_scancode.h>
+#include <SDL3/SDL_assert.h>
 #include <SDL3/SDL_video.h>
 
 #include <stddef.h>
@@ -232,15 +233,22 @@ static void sl__render_check_space(int vertices_needed, int indices_needed)
 
 static inline void sl__render_add_vertex(const sl_vertex_t* v)
 {
-    if (sl__render.vertex_count >= SL__VERTEX_BUFFER_SIZE) {
-        return;
-    }
+    SDL_assert(sl__render.vertex_count < SL__VERTEX_BUFFER_SIZE);
 
     sl_vertex_t* vertex = &sl__render.vertex_buffer[sl__render.vertex_count];
-    vertex->position = sl_vec3_transform(v->position, &sl__render.matrix_transform);
-    vertex->texcoord = sl_vec2_transform(v->texcoord, &sl__render.matrix_texture);
-    vertex->normal = sl_vec3_transform(v->normal, &sl__render.matrix_normal);
+    vertex->position = v->position;
+    vertex->texcoord = v->texcoord;
+    vertex->normal = v->normal;
     vertex->color = v->color;
+
+    if (!sl__render.transform_is_identity) {
+        vertex->position = sl_vec3_transform(vertex->position, &sl__render.matrix_transform);
+        vertex->normal = sl_vec3_transform(vertex->normal, &sl__render.matrix_normal);
+    }
+
+    if (!sl__render.texture_is_identity) {
+        vertex->texcoord = sl_vec2_transform(vertex->texcoord, &sl__render.matrix_texture);
+    }
 
     sl__render.vertex_count++;
 }
@@ -743,8 +751,14 @@ void sl_render_pop(void)
     if (sl__render.matrix_transform_stack_pos > 0) {
         sl__render.matrix_transform_stack_pos--;
         SDL_memcpy(sl__render.matrix_transform.a, sl__render.matrix_transform_stack[sl__render.matrix_transform_stack_pos].a, sizeof(sl_mat4_t));
-        sl__render.matrix_normal = sl_mat4_inverse(&sl__render.matrix_transform);
-        sl__render.matrix_normal = sl_mat4_transpose(&sl__render.matrix_normal);
+        sl__render.transform_is_identity = (0 == SDL_memcmp(sl__render.matrix_transform.a, &SL_MAT4_IDENTITY, sizeof(sl_mat4_t)));
+        if (!sl__render.transform_is_identity) {
+            sl__render.matrix_normal = sl_mat4_inverse(&sl__render.matrix_transform);
+            sl__render.matrix_normal = sl_mat4_transpose(&sl__render.matrix_normal);
+        }
+        else {
+            sl__render.matrix_normal = SL_MAT4_IDENTITY;
+        }
     }
 }
 
@@ -752,12 +766,14 @@ void sl_render_identity(void)
 {
     sl__render.matrix_transform = SL_MAT4_IDENTITY;
     sl__render.matrix_normal = SL_MAT4_IDENTITY;
+    sl__render.transform_is_identity = true;
 }
 
 void sl_render_translate(sl_vec3_t v)
 {
     sl_mat4_t translate = sl_mat4_translate(v);
     sl__render.matrix_transform = sl_mat4_mul(&sl__render.matrix_transform, &translate);
+    sl__render.transform_is_identity = false;
 }
 
 void sl_render_rotate(sl_vec3_t v)
@@ -782,12 +798,15 @@ void sl_render_rotate(sl_vec3_t v)
         sl__render.matrix_normal = sl_mat4_inverse(transform);
         sl__render.matrix_normal = sl_mat4_transpose(&sl__render.matrix_normal);
     }
+
+    sl__render.transform_is_identity = false;
 }
 
 void sl_render_scale(sl_vec3_t v)
 {
     sl_mat4_t scale = sl_mat4_scale(v);
     sl__render.matrix_transform = sl_mat4_mul(&sl__render.matrix_transform, &scale);
+    sl__render.transform_is_identity = false;
 }
 
 void sl_render_transform(const sl_mat4_t* matrix)
@@ -795,29 +814,34 @@ void sl_render_transform(const sl_mat4_t* matrix)
     sl__render.matrix_transform = sl_mat4_mul(&sl__render.matrix_transform, matrix);
     sl__render.matrix_normal = sl_mat4_inverse(&sl__render.matrix_transform);
     sl__render.matrix_normal = sl_mat4_transpose(&sl__render.matrix_normal);
+    sl__render.transform_is_identity = false;
 }
 
 void sl_render_texture_identity(void)
 {
     sl__render.matrix_texture = SL_MAT4_IDENTITY;
+    sl__render.texture_is_identity = true;
 }
 
 void sl_render_texture_translate(sl_vec2_t v)
 {
     sl_mat4_t translate = sl_mat4_translate(SL_VEC3(v.x, v.y, 0.0f));
     sl__render.matrix_texture = sl_mat4_mul(&sl__render.matrix_texture, &translate);
+    sl__render.texture_is_identity = false;
 }
 
 void sl_render_texture_rotate(float radians)
 {
     sl_mat4_t rotate = sl_mat4_rotate_z(radians);
     sl__render.matrix_texture = sl_mat4_mul(&sl__render.matrix_texture, &rotate);
+    sl__render.texture_is_identity = false;
 }
 
 void sl_render_texture_scale(sl_vec2_t v)
 {
     sl_mat4_t scale = sl_mat4_scale(SL_VEC3(v.x, v.y, 1.0f));
     sl__render.matrix_texture = sl_mat4_mul(&sl__render.matrix_texture, &scale);
+    sl__render.texture_is_identity = false;
 }
 
 void sl_render_triangle_list(const sl_vertex_t* triangles, int triangle_count)

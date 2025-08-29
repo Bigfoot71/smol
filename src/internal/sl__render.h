@@ -122,6 +122,8 @@ extern struct sl__render {
     sl_mat4_t matrix_proj;
 
     int matrix_transform_stack_pos;
+    bool transform_is_identity;
+    bool texture_is_identity;
     bool use_custom_proj;
 
     sl_vertex_t vertex_buffer[SL__VERTEX_BUFFER_SIZE];
