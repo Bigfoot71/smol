@@ -1124,30 +1124,35 @@ void sl_render_rectangle_ex(sl_vec2_t center, sl_vec2_t size, float rotation)
     sl_render_quad(tl, tr, br, bl);
 }
 
-
 void sl_render_rectangle_lines_ex(sl_vec2_t center, sl_vec2_t size, float rotation, float thickness)
 {
     float half_w = size.x * 0.5f;
     float half_h = size.y * 0.5f;
 
-    sl_vec2_t corners[4] = {
-        {-half_w, -half_h}, // Top-left
-        { half_w, -half_h}, // Top-right
-        { half_w,  half_h}, // Bottom-right
-        {-half_w,  half_h}  // Bottom-left
-    };
-
     float cos_r = cosf(rotation);
     float sin_r = sinf(rotation);
 
-    for (int i = 0; i < 4; i++) {
-        float x_rot = corners[i].x * cos_r - corners[i].y * sin_r;
-        float y_rot = corners[i].x * sin_r + corners[i].y * cos_r;
-        corners[i].x = center.x + x_rot;
-        corners[i].y = center.y + y_rot;
-    }
+    sl_vec2_t tl = {
+        center.x + (-half_w * cos_r - -half_h * sin_r),
+        center.y + (-half_w * sin_r + -half_h * cos_r)
+    };
+    
+    sl_vec2_t tr = {
+        center.x + ( half_w * cos_r - -half_h * sin_r),
+        center.y + ( half_w * sin_r + -half_h * cos_r)
+    };
+    
+    sl_vec2_t br = {
+        center.x + ( half_w * cos_r -  half_h * sin_r),
+        center.y + ( half_w * sin_r +  half_h * cos_r)
+    };
+    
+    sl_vec2_t bl = {
+        center.x + (-half_w * cos_r -  half_h * sin_r),
+        center.y + (-half_w * sin_r +  half_h * cos_r)
+    };
 
-    sl_render_quad_lines(corners[0], corners[1], corners[2], corners[3], thickness);
+    sl_render_quad_lines(tl, tr, br, bl, thickness);
 }
 
 void sl_render_rounded_rectangle(float x, float y, float w, float h, float radius, int segments)
