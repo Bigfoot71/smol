@@ -582,8 +582,7 @@ typedef uint32_t sl_music_id;
         0.0f, 1.0f, 0.0f, 0.0f, \
         0.0f, 0.0f, 1.0f, 0.0f, \
         0.0f, 0.0f, 0.0f, 1.0f  \
-    };
-
+    }
 
 #if defined(__cplusplus)
 extern "C" {
