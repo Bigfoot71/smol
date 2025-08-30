@@ -229,7 +229,7 @@ sl_vec2_t sl_display_get_size(void)
     SDL_Rect bounds;
     SDL_GetDisplayBounds(displayIndex, &bounds);
 
-    return SL_VEC2(bounds.x, bounds.y);
+    return SL_VEC2(bounds.w, bounds.h);
 }
 
 const char* sl_window_get_title(void)
