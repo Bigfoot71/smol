@@ -438,9 +438,8 @@ sl_mat4_t sl_mat4_look_at(sl_vec3_t eye, sl_vec3_t target, sl_vec3_t up)
         eye.z - target.z
     };
 
-    sl_vec3_t v = { vz.x, vz.y, vz.z };
-    length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
-    if (length == 0.0f) length = 1.0f;
+    length = sqrtf(vz.x * vz.x + vz.y * vz.y + vz.z * vz.z);
+    if (length < 1e-6f) length = 1.0f;
     inv_len = 1.0f / length;
     vz.x *= inv_len;
     vz.y *= inv_len;
@@ -452,9 +451,8 @@ sl_mat4_t sl_mat4_look_at(sl_vec3_t eye, sl_vec3_t target, sl_vec3_t up)
         up.x * vz.y - up.y * vz.x
     };
 
-    for (int_fast8_t i = 0; i < 3; ++i) v.v[i] = vx.v[i];
-    length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
-    if (length == 0.0f) length = 1.0f;
+    length = sqrtf(vx.x * vx.x + vx.y * vx.y + vx.z * vx.z);
+    if (length < 1e-6f) length = 1.0f;
     inv_len = 1.0f / length;
     vx.x *= inv_len;
     vx.y *= inv_len;
