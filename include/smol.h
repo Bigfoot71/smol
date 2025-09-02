@@ -2221,7 +2221,7 @@ SLAPI int sl_codepoint_next(const char* text, int* codepointSize);
  * @param codepointSize Output size of the codepoint in bytes
  * @return Unicode codepoint
  */
-SLAPI int sl_codepoint_get_previous(const char* text, int* codepointSize);
+SLAPI int sl_codepoint_prev(const char* text, int* codepointSize);
 
 /**
  * @brief Count the number of codepoints in a UTF-8 string
