@@ -59,16 +59,16 @@ int sl_codepoint_prev(const char* text, int* codepoint_size)
 {
     const char* ptr = text;
     int codepoint = 0x3f;       // Codepoint (defaults to '?')
-    int cpSize = 0;
+    int cp_size = 0;
     *codepoint_size = 0;
 
     // Move to previous codepoint
     do ptr--; while (((0x80 & ptr[0]) != 0) && ((0xc0 & ptr[0]) == 0x80));
 
-    codepoint = sl_codepoint_next(ptr, &cpSize);
+    codepoint = sl_codepoint_next(ptr, &cp_size);
 
     if (codepoint != 0) {
-        *codepoint_size = cpSize;
+        *codepoint_size = cp_size;
     }
 
     return codepoint;
@@ -89,7 +89,7 @@ int sl_codepoint_count(const char* text)
     return length;
 }
 
-const char* sl_codepoint_to_utf8(int codepoint, int* utf8Size)
+const char* sl_codepoint_to_utf8(int codepoint, int* utf8_size)
 {
     static char utf8[6];
     SDL_memset(utf8, 0, 6);
@@ -118,7 +118,7 @@ const char* sl_codepoint_to_utf8(int codepoint, int* utf8Size)
         size = 4;
     }
 
-    *utf8Size = size;
+    *utf8_size = size;
 
     return utf8;
 }
