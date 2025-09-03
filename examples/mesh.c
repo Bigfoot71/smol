@@ -3,11 +3,11 @@
 #define WIN_W 640
 #define WIN_H 480
 
-static const sl_vertex_t triangle[3] =
+static const sl_vertex_3d_t triangle[3] =
 {
-    SL_VERTEX(SL_VEC3(320, 0, 0), SL_VEC2(0, 0), SL_VEC3(0, 0, 1), SL_RED),
-    SL_VERTEX(SL_VEC3(0, 480, 0), SL_VEC2(0, 0), SL_VEC3(0, 0, 1), SL_GREEN),
-    SL_VERTEX(SL_VEC3(640, 480, 0), SL_VEC2(0, 0), SL_VEC3(0, 0, 1), SL_BLUE),
+    SL_VERTEX_3D(SL_VEC3(320, 0, 0), SL_VEC2(0, 0), SL_VEC3(0, 0, 1), SL_RED),
+    SL_VERTEX_3D(SL_VEC3(0, 480, 0), SL_VEC2(0, 0), SL_VEC3(0, 0, 1), SL_GREEN),
+    SL_VERTEX_3D(SL_VEC3(640, 480, 0), SL_VEC2(0, 0), SL_VEC3(0, 0, 1), SL_BLUE),
 };
 
 int main(void)

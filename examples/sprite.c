@@ -39,11 +39,11 @@ void draw_sprite(sprite_t s, int frame, float x, float y, float scale)
     float hw = s.fw * scale * 0.5f;
     float hh = s.fh * scale * 0.5f;
 
-    sl_vertex_t q[] = {
-        {{x-hw, y-hh}, {u,    v   }, {0, 0, 1}, SL_WHITE},
-        {{x-hw, y+hh}, {u,    v+dv}, {0, 0, 1}, SL_WHITE}, 
-        {{x+hw, y+hh}, {u+du, v+dv}, {0, 0, 1}, SL_WHITE},
-        {{x+hw, y-hh}, {u+du, v   }, {0, 0, 1}, SL_WHITE}
+    sl_vertex_2d_t q[] = {
+        {{x-hw, y-hh}, {u,    v   }, SL_WHITE},
+        {{x-hw, y+hh}, {u,    v+dv}, SL_WHITE}, 
+        {{x+hw, y+hh}, {u+du, v+dv}, SL_WHITE},
+        {{x+hw, y-hh}, {u+du, v   }, SL_WHITE}
     };
 
     sl_render_sampler(0, s.texture);
