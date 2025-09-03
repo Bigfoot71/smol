@@ -275,8 +275,7 @@ static void sl__render_codepoint(const sl__font_t* font, int codepoint, float x,
 {
     /* --- Get the character index position and it's data --- */
 
-    int index = sl__glyph_index(font, codepoint);
-    const sl__glyph_t* glyph = &font->glyphs[index];
+    const sl__glyph_t* glyph = sl__glyph_info(font, codepoint);
 
     /* --- Calculate the scale factor based on font size --- */
 
@@ -340,8 +339,7 @@ static void sl__render_codepoints(const sl__font_t* font, const int* codepoints,
 
     for (int i = 0; i < length; i++)
     {
-        int index = sl__glyph_index(font, codepoints[i]);
-        const sl__glyph_t* glyph = &font->glyphs[index];
+        const sl__glyph_t* glyph = sl__glyph_info(font, codepoints[i]);
 
         if (codepoints[i] == '\n') {
             y_offset += (font_size + y_spacing);
@@ -376,8 +374,7 @@ static void sl__render_text(const sl__font_t* font, const char* text, float x, f
         int codepointByteCount = 0;
         int codepoint = sl_codepoint_next(&text[i], &codepointByteCount);
 
-        int index = sl__glyph_index(font, codepoint);
-        const sl__glyph_t* glyph = &font->glyphs[index];
+        const sl__glyph_t* glyph = sl__glyph_info(font, codepoint);
 
         if (codepoint == '\n') {
             y_offset += (font_size + y_spacing);

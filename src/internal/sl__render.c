@@ -123,7 +123,7 @@ void sl__render_quit(void)
 
 /* === Font Functions === */
 
-int sl__glyph_index(const sl__font_t* font, int codepoint)
+const sl__glyph_t* sl__glyph_info(const sl__font_t* font, int codepoint)
 {
 #   define FALLBACK 63 //< Fallback is '?'
 
@@ -139,16 +139,11 @@ int sl__glyph_index(const sl__font_t* font, int codepoint)
         }
     }
 
-    if (!index && font->glyphs[0].value != codepoint) {
+    if (index == 0 && font->glyphs[0].value != codepoint) {
         index = fallback_index;
     }
 
-    return index;
-}
-
-sl__glyph_t sl__glyph_info(const sl__font_t* font, int codepoint)
-{
-    return font->glyphs[sl__glyph_index(font, codepoint)];
+    return &font->glyphs[index];
 }
 
 void sl__font_measure_text(float* w, float* h, const sl__font_t* font, const char* text, float font_size, float x_spacing, float y_spacing)
@@ -181,11 +176,8 @@ void sl__font_measure_text(float* w, float* h, const sl__font_t* font, const cha
             text_height += font_size + y_spacing;
         }
         else if (w != NULL) {
-            int index = sl__glyph_index(font, letter);
-            float char_width = (font->glyphs[index].x_advance > 0)
-                ? font->glyphs[index].x_advance
-                : (font->glyphs[index].w_atlas + font->glyphs[index].x_offset);
-
+            const sl__glyph_t* glyph = sl__glyph_info(font, letter);
+            float char_width = (glyph->x_advance > 0) ? glyph->x_advance : (glyph->w_atlas + glyph->x_offset);
             current_width += char_width;
             current_chars_in_line++;
         }
@@ -222,11 +214,8 @@ void sl__font_measure_codepoints(float* w, float* h, const sl__font_t* font, con
             text_height += font_size + y_spacing;
         }
         else {
-            int index = sl__glyph_index(font, letter);
-            float char_width = (font->glyphs[index].x_advance > 0)
-                ? font->glyphs[index].x_advance
-                : (font->glyphs[index].w_atlas + font->glyphs[index].x_offset);
-
+            const sl__glyph_t* glyph = sl__glyph_info(font, letter);
+            float char_width = (glyph->x_advance > 0) ? glyph->x_advance : (glyph->w_atlas + glyph->x_offset);
             current_width += char_width;
             current_chars_in_line++;
         }

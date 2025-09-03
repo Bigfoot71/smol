@@ -149,9 +149,7 @@ void sl__render_quit(void);
 
 /* === Font Functions === */
 
-int sl__glyph_index(const sl__font_t* font, int codepoint);
-sl__glyph_t sl__glyph_info(const sl__font_t* font, int codepoint);
-
+const sl__glyph_t* sl__glyph_info(const sl__font_t* font, int codepoint);
 void sl__font_measure_text(float* w, float* h, const sl__font_t* font, const char* text, float font_size, float x_spacing, float y_spacing);
 void sl__font_measure_codepoints(float* w, float* h, const sl__font_t* font, const int* codepoints, int length, float font_size, float x_spacing, float y_spacing);
 
