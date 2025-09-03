@@ -133,7 +133,7 @@ static void sl__render_flush_all(void)
     glBindBuffer(GL_ARRAY_BUFFER, sl__render.vbo);
     glBufferSubData(
         GL_ARRAY_BUFFER, 0, 
-        sl__render.vertex_count * sizeof(sl_vertex_t), 
+        sl__render.vertex_count * sizeof(sl_vertex_2d_t), 
         sl__render.vertex_buffer
     );
 
@@ -146,16 +146,13 @@ static void sl__render_flush_all(void)
 
     /* --- Setup vertex attributes --- */
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_t), (void*)offsetof(sl_vertex_t, position));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_2d_t), (void*)offsetof(sl_vertex_2d_t, position));
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_t), (void*)offsetof(sl_vertex_t, texcoord));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_2d_t), (void*)offsetof(sl_vertex_2d_t, texcoord));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_t), (void*)offsetof(sl_vertex_t, normal));
-    glEnableVertexAttribArray(2);
-
-    glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(sl_vertex_t), (void*)offsetof(sl_vertex_t, color));
+    glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(sl_vertex_2d_t), (void*)offsetof(sl_vertex_2d_t, color));
     glEnableVertexAttribArray(3);
 
     /* --- Calculation of the projection view matrix --- */
@@ -231,19 +228,17 @@ static void sl__render_check_space(int vertices_needed, int indices_needed)
     }
 }
 
-static inline void sl__render_add_vertex(const sl_vertex_t* v)
+static inline void sl__render_add_vertex(const sl_vertex_2d_t* v)
 {
     SDL_assert(sl__render.vertex_count < SL__VERTEX_BUFFER_SIZE);
 
-    sl_vertex_t* vertex = &sl__render.vertex_buffer[sl__render.vertex_count];
+    sl_vertex_2d_t* vertex = &sl__render.vertex_buffer[sl__render.vertex_count];
     vertex->position = v->position;
     vertex->texcoord = v->texcoord;
-    vertex->normal = v->normal;
     vertex->color = v->color;
 
     if (!sl__render.transform_is_identity) {
-        vertex->position = sl_vec3_transform(vertex->position, &sl__render.matrix_transform);
-        vertex->normal = sl_vec3_transform(vertex->normal, &sl__render.matrix_normal);
+        vertex->position = sl_vec2_transform(vertex->position, &sl__render.matrix_transform);
     }
 
     if (!sl__render.texture_is_identity) {
@@ -255,10 +250,9 @@ static inline void sl__render_add_vertex(const sl_vertex_t* v)
 
 static inline void sl__render_add_point(float x, float y, float u, float v)
 {
-    sl__render_add_vertex(&(sl_vertex_t) {
-        .position = SL_VEC3(x, y, 0),
+    sl__render_add_vertex(&(sl_vertex_2d_t) {
+        .position = SL_VEC2(x, y),
         .texcoord = SL_VEC2(u, v),
-        .normal = SL_VEC3(0, 0, 1),
         .color = sl__render.current_color
     });
 }
@@ -315,11 +309,11 @@ static void sl__render_codepoint(const sl__font_t* font, int codepoint, float x,
 
     /* --- Push the character to the batch with scaled dimensions --- */
 
-    sl_vertex_t quad[4] = {
-        SL_VERTEX(SL_VEC3(x_dst, y_dst, 0), SL_VEC2(u0, v0), SL_VEC3(0, 0, 1), sl__render.current_color),
-        SL_VERTEX(SL_VEC3(x_dst, y_dst + h_dst, 0), SL_VEC2(u0, v1), SL_VEC3(0, 0, 1), sl__render.current_color),
-        SL_VERTEX(SL_VEC3(x_dst + w_dst, y_dst + h_dst, 0), SL_VEC2(u1, v1), SL_VEC3(0, 0, 1), sl__render.current_color),
-        SL_VERTEX(SL_VEC3(x_dst + w_dst, y_dst, 0), SL_VEC2(u1, v0), SL_VEC3(0, 0, 1), sl__render.current_color)
+    sl_vertex_2d_t quad[4] = {
+        SL_VERTEX_2D(SL_VEC2(x_dst, y_dst), SL_VEC2(u0, v0), sl__render.current_color),
+        SL_VERTEX_2D(SL_VEC2(x_dst, y_dst + h_dst), SL_VEC2(u0, v1), sl__render.current_color),
+        SL_VERTEX_2D(SL_VEC2(x_dst + w_dst, y_dst + h_dst), SL_VEC2(u1, v1), sl__render.current_color),
+        SL_VERTEX_2D(SL_VEC2(x_dst + w_dst, y_dst), SL_VEC2(u1, v0), sl__render.current_color)
     };
 
     sl_render_quad_list(quad, 1);
@@ -749,20 +743,12 @@ void sl_render_pop(void)
         sl__render.matrix_transform_stack_pos--;
         SDL_memcpy(sl__render.matrix_transform.a, sl__render.matrix_transform_stack[sl__render.matrix_transform_stack_pos].a, sizeof(sl_mat4_t));
         sl__render.transform_is_identity = (0 == SDL_memcmp(sl__render.matrix_transform.a, &SL_MAT4_IDENTITY, sizeof(sl_mat4_t)));
-        if (!sl__render.transform_is_identity) {
-            sl__render.matrix_normal = sl_mat4_inverse(&sl__render.matrix_transform);
-            sl__render.matrix_normal = sl_mat4_transpose(&sl__render.matrix_normal);
-        }
-        else {
-            sl__render.matrix_normal = SL_MAT4_IDENTITY;
-        }
     }
 }
 
 void sl_render_identity(void)
 {
     sl__render.matrix_transform = SL_MAT4_IDENTITY;
-    sl__render.matrix_normal = SL_MAT4_IDENTITY;
     sl__render.transform_is_identity = true;
 }
 
@@ -791,11 +777,6 @@ void sl_render_rotate(sl_vec3_t v)
         *transform = sl_mat4_mul(transform, &rotate);
     }
 
-    if (v.x != 0.0f || v.y != 0.0f || v.z != 0.0f) {
-        sl__render.matrix_normal = sl_mat4_inverse(transform);
-        sl__render.matrix_normal = sl_mat4_transpose(&sl__render.matrix_normal);
-    }
-
     sl__render.transform_is_identity = false;
 }
 
@@ -809,8 +790,6 @@ void sl_render_scale(sl_vec3_t v)
 void sl_render_transform(const sl_mat4_t* matrix)
 {
     sl__render.matrix_transform = sl_mat4_mul(&sl__render.matrix_transform, matrix);
-    sl__render.matrix_normal = sl_mat4_inverse(&sl__render.matrix_transform);
-    sl__render.matrix_normal = sl_mat4_transpose(&sl__render.matrix_normal);
     sl__render.transform_is_identity = false;
 }
 
@@ -841,7 +820,7 @@ void sl_render_texture_scale(sl_vec2_t v)
     sl__render.texture_is_identity = false;
 }
 
-void sl_render_triangle_list(const sl_vertex_t* triangles, int triangle_count)
+void sl_render_triangle_list(const sl_vertex_2d_t* triangles, int triangle_count)
 {
     if (triangle_count <= 0) return;
     sl__render_check_state_change();
@@ -849,7 +828,7 @@ void sl_render_triangle_list(const sl_vertex_t* triangles, int triangle_count)
     for (int i = 0; i < triangle_count; i++) {
         sl__render_check_space(3, 3);
         int base_index = sl__render.vertex_count;
-        const sl_vertex_t* tri = &triangles[i * 3];
+        const sl_vertex_2d_t* tri = &triangles[i * 3];
 
         for (int j = 0; j < 3; j++) {
             sl__render_add_vertex(&tri[j]);
@@ -861,7 +840,7 @@ void sl_render_triangle_list(const sl_vertex_t* triangles, int triangle_count)
     }
 }
 
-void sl_render_triangle_strip(const sl_vertex_t* vertices, int count)
+void sl_render_triangle_strip(const sl_vertex_2d_t* vertices, int count)
 {
     if (count < 3) return;
     sl__render_check_state_change();
@@ -886,7 +865,7 @@ void sl_render_triangle_strip(const sl_vertex_t* vertices, int count)
     }
 }
 
-void sl_render_triangle_fan(const sl_vertex_t* vertices, int count)
+void sl_render_triangle_fan(const sl_vertex_2d_t* vertices, int count)
 {
     if (count < 3) return;
     sl__render_check_state_change();
@@ -905,7 +884,7 @@ void sl_render_triangle_fan(const sl_vertex_t* vertices, int count)
     }
 }
 
-void sl_render_quad_list(const sl_vertex_t* quads, int quad_count)
+void sl_render_quad_list(const sl_vertex_2d_t* quads, int quad_count)
 {
     if (quad_count <= 0) return;
     sl__render_check_state_change();
@@ -913,7 +892,7 @@ void sl_render_quad_list(const sl_vertex_t* quads, int quad_count)
     for (int i = 0; i < quad_count; i++) {
         sl__render_check_space(4, 6);
         int base_index = sl__render.vertex_count;
-        const sl_vertex_t* quad = &quads[i * 4];
+        const sl_vertex_2d_t* quad = &quads[i * 4];
 
         for (int j = 0; j < 4; j++) {
             sl__render_add_vertex(&quad[j]);
@@ -931,7 +910,7 @@ void sl_render_quad_list(const sl_vertex_t* quads, int quad_count)
     }
 }
 
-void sl_render_quad_strip(const sl_vertex_t* vertices, int count)
+void sl_render_quad_strip(const sl_vertex_2d_t* vertices, int count)
 {
     if (count < 4 || count % 2 != 0) return;
     sl__render_check_state_change();
@@ -957,7 +936,7 @@ void sl_render_quad_strip(const sl_vertex_t* vertices, int count)
     }
 }
 
-void sl_render_quad_fan(const sl_vertex_t* vertices, int count)
+void sl_render_quad_fan(const sl_vertex_2d_t* vertices, int count)
 {
     if (count < 4) return;
     sl__render_check_state_change();
@@ -2222,16 +2201,16 @@ void sl_render_mesh(sl_mesh_id mesh, uint32_t count)
 
     glBindBuffer(GL_ARRAY_BUFFER, data->vbo);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_t), (void*)offsetof(sl_vertex_t, position));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_3d_t), (void*)offsetof(sl_vertex_3d_t, position));
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_t), (void*)offsetof(sl_vertex_t, texcoord));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_3d_t), (void*)offsetof(sl_vertex_3d_t, texcoord));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_t), (void*)offsetof(sl_vertex_t, normal));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_3d_t), (void*)offsetof(sl_vertex_3d_t, normal));
     glEnableVertexAttribArray(2);
 
-    glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(sl_vertex_t), (void*)offsetof(sl_vertex_t, color));
+    glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(sl_vertex_3d_t), (void*)offsetof(sl_vertex_3d_t, color));
     glEnableVertexAttribArray(3);
 
     /* --- Draw! --- */
@@ -2265,16 +2244,16 @@ void sl_render_mesh_lines(sl_mesh_id mesh, uint32_t count)
 
     glBindBuffer(GL_ARRAY_BUFFER, data->vbo);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_t), (void*)offsetof(sl_vertex_t, position));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_3d_t), (void*)offsetof(sl_vertex_3d_t, position));
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_t), (void*)offsetof(sl_vertex_t, texcoord));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_3d_t), (void*)offsetof(sl_vertex_3d_t, texcoord));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_t), (void*)offsetof(sl_vertex_t, normal));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(sl_vertex_3d_t), (void*)offsetof(sl_vertex_3d_t, normal));
     glEnableVertexAttribArray(2);
 
-    glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(sl_vertex_t), (void*)offsetof(sl_vertex_t, color));
+    glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(sl_vertex_3d_t), (void*)offsetof(sl_vertex_3d_t, color));
     glEnableVertexAttribArray(3);
 
     /* --- Draw! --- */

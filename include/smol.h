@@ -448,12 +448,18 @@ typedef struct sl_color {
     uint8_t a;
 } sl_color_t;
 
-typedef struct sl_vertex {
+typedef struct sl_vertex_2d {
+    sl_vec2_t position;
+    sl_vec2_t texcoord;
+    sl_color_t color;
+} sl_vertex_2d_t;
+
+typedef struct sl_vertex_3d {
     sl_vec3_t position;
     sl_vec2_t texcoord;
     sl_vec3_t normal;
     sl_color_t color;
-} sl_vertex_t;
+} sl_vertex_3d_t;
 
 typedef struct sl_image {
     void* pixels;
@@ -511,8 +517,14 @@ typedef uint32_t sl_music_id;
         static_cast<uint8_t>((b)),                          \
         static_cast<uint8_t>((a))                           \
     }
-#define SL_VERTEX(p, t, n, c)                               \
-    sl_vertex {                                             \
+#define SL_VERTEX_2D(p, t, c)                               \
+    sl_vertex_2d {                                          \
+        static_cast<sl_vec2>((p)),                          \
+        static_cast<sl_vec2>((t)),                          \
+        static_cast<sl_color>((c))                          \
+    }
+#define SL_VERTEX_3D(p, t, n, c)                            \
+    sl_vertex_3d {                                          \
         static_cast<sl_vec3>((p)),                          \
         static_cast<sl_vec2>((t)),                          \
         static_cast<sl_vec3>((n)),                          \
@@ -525,7 +537,8 @@ typedef uint32_t sl_music_id;
 #define SL_VEC4(x, y, z, w) (sl_vec4_t) { (x), (y), (z), (w)  }
 #define SL_QUAT(w, x, y, z) (sl_quat_t) { (w), (x), (y), (z)  }
 #define SL_COLOR(r, g, b, a) (sl_color_t) { (r), (g), (b), (a) }
-#define SL_VERTEX(p, t, n, c) (sl_vertex_t) { (p), (t), (n), (c) }
+#define SL_VERTEX_2D(p, t, c) (sl_vertex_2d_t) { (p), (t), (c) }
+#define SL_VERTEX_3D(p, t, n, c) (sl_vertex_3d_t) { (p), (t), (n), (c) }
 #define SL_MAT4_T (sl_mat4_t)
 #endif
 
@@ -1097,37 +1110,37 @@ SLAPI void sl_render_texture_scale(sl_vec2_t v);
  *  @param triangles Array of vertices, 3 vertices per triangle
  *  @param triangle_count Number of triangles to render
  */
-SLAPI void sl_render_triangle_list(const sl_vertex_t* triangles, int triangle_count);
+SLAPI void sl_render_triangle_list(const sl_vertex_2d_t* triangles, int triangle_count);
 
 /** Render connected triangles (triangle strip)
  *  @param vertices Array of vertices forming a strip
  *  @param count Total number of vertices
  */
-SLAPI void sl_render_triangle_strip(const sl_vertex_t* vertices, int count);
+SLAPI void sl_render_triangle_strip(const sl_vertex_2d_t* vertices, int count);
 
 /** Render connected triangles forming a fan
  *  @param vertices Array of vertices, first vertex is the fan center
  *  @param count Total number of vertices
  */
-SLAPI void sl_render_triangle_fan(const sl_vertex_t* vertices, int count);
+SLAPI void sl_render_triangle_fan(const sl_vertex_2d_t* vertices, int count);
 
 /** Render quads from array (quad list)
  *  @param quads Array of vertices, 4 vertices per quad
  *  @param quad_count Number of quads to render
  */
-SLAPI void sl_render_quad_list(const sl_vertex_t* quads, int quad_count);
+SLAPI void sl_render_quad_list(const sl_vertex_2d_t* quads, int quad_count);
 
 /** Render connected quads (quad strip)
  *  @param vertices Array of vertices forming a strip
  *  @param count Total number of vertices
  */
-SLAPI void sl_render_quad_strip(const sl_vertex_t* vertices, int count);
+SLAPI void sl_render_quad_strip(const sl_vertex_2d_t* vertices, int count);
 
 /** Render connected quads forming a fan
  *  @param vertices Array of vertices, first vertex is the fan center
  *  @param count Total number of vertices
  */
-SLAPI void sl_render_quad_fan(const sl_vertex_t* vertices, int count);
+SLAPI void sl_render_quad_fan(const sl_vertex_2d_t* vertices, int count);
 
 /** Render lines from array (line list)
  *  Only works correctly in 2D
@@ -1604,7 +1617,7 @@ SLAPI bool sl_texture_query(sl_texture_id texture, int* w, int* h);
  * @param i_count Number of indices
  * @return Mesh identifier
  */
-SLAPI sl_mesh_id sl_mesh_create(const sl_vertex_t* vertices, uint16_t v_count, const uint16_t* indices, uint32_t i_count);
+SLAPI sl_mesh_id sl_mesh_create(const sl_vertex_3d_t* vertices, uint16_t v_count, const uint16_t* indices, uint32_t i_count);
 
 /**
  * @brief Destroy a mesh
@@ -1618,7 +1631,7 @@ SLAPI void sl_mesh_destroy(sl_mesh_id mesh);
  * @param vertices Pointer to new vertices
  * @param count Number of vertices
  */
-SLAPI void sl_mesh_update_vertices(sl_mesh_id mesh, const sl_vertex_t* vertices, uint16_t count);
+SLAPI void sl_mesh_update_vertices(sl_mesh_id mesh, const sl_vertex_3d_t* vertices, uint16_t count);
 
 /**
  * @brief Update indices of a mesh

@@ -117,7 +117,6 @@ extern struct sl__render {
     sl_mat4_t matrix_transform_stack[SL__MATRIX_STACK_SIZE];
     sl_mat4_t matrix_transform;
     sl_mat4_t matrix_texture;
-    sl_mat4_t matrix_normal;
     sl_mat4_t matrix_view;
     sl_mat4_t matrix_proj;
 
@@ -126,7 +125,7 @@ extern struct sl__render {
     bool texture_is_identity;
     bool use_custom_proj;
 
-    sl_vertex_t vertex_buffer[SL__VERTEX_BUFFER_SIZE];
+    sl_vertex_2d_t vertex_buffer[SL__VERTEX_BUFFER_SIZE];
     GLushort index_buffer[SL__INDEX_BUFFER_SIZE];
     int vertex_count;
     int index_count;

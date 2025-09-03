@@ -23,13 +23,13 @@
 
 /* === Public API === */
 
-sl_mesh_id sl_mesh_create(const sl_vertex_t* vertices, uint16_t v_count, const uint16_t* indices, uint32_t i_count)
+sl_mesh_id sl_mesh_create(const sl_vertex_3d_t* vertices, uint16_t v_count, const uint16_t* indices, uint32_t i_count)
 {
     sl__mesh_t mesh = { 0 };
 
     glGenBuffers(1, &mesh.vbo);
     glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
-    glBufferData(GL_ARRAY_BUFFER, v_count * sizeof(sl_vertex_t), vertices, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, v_count * sizeof(sl_vertex_3d_t), vertices, GL_DYNAMIC_DRAW);
 
     if (indices != NULL && i_count > 0) {
         glGenBuffers(1, &mesh.ebo);
@@ -57,7 +57,7 @@ void sl_mesh_destroy(sl_mesh_id mesh)
     sl__registry_remove(&sl__render.reg_meshes, mesh);
 }
 
-void sl_mesh_update_vertices(sl_mesh_id mesh, const sl_vertex_t* vertices, uint16_t count)
+void sl_mesh_update_vertices(sl_mesh_id mesh, const sl_vertex_3d_t* vertices, uint16_t count)
 {
     if (vertices == NULL || count == 0) {
         return;
@@ -69,7 +69,7 @@ void sl_mesh_update_vertices(sl_mesh_id mesh, const sl_vertex_t* vertices, uint1
     glBindBuffer(GL_ARRAY_BUFFER, data->vbo);
     glBufferSubData(
         GL_ARRAY_BUFFER, 0, 
-        count * sizeof(sl_vertex_t), 
+        count * sizeof(sl_vertex_3d_t), 
         vertices
     );
 }
