@@ -72,9 +72,7 @@ sl_font_id sl_font_load_from_memory(const void* file_data, size_t data_size, sl_
     );
 
     if (!atlasGenerated) {
-        if (font.glyphs) {
-            SDL_free(font.glyphs);
-        }
+        SDL_free(font.glyphs);
         return 0;
     }
 
