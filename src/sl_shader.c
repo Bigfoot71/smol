@@ -53,11 +53,11 @@ static const char* sl__shader_vertex_main_str =
 {
     "\nvoid main()"
     "{"
-    "    gl_Position = vertex(u_mvp, a_position);"
     "    v_position = a_position;"
     "    v_texcoord = a_texcoord;"
     "    v_normal = a_normal;"
     "    v_color = a_color;"
+    "    gl_Position = vertex(u_mvp, a_position);"
     "}"
 };
 
