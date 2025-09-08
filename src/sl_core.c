@@ -186,17 +186,17 @@ double sl_time(void)
     return 0.001 * sl__core.total_time;
 }
 
-double sl_frame_time(void)
+double sl_frame_get_delta(void)
 {
     return 0.001 * sl__core.frame_time;
 }
 
-void sl_frame_target(int fps)
+void sl_frame_set_target_fps(int fps)
 {
     sl__core.target_frame_time = 1.0 / (double)fps;
 }
 
-int sl_frame_per_second(void)
+int sl_frame_get_fps(void)
 {
     return sl__core.fps_average;
 }

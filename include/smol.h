@@ -660,13 +660,13 @@ SLAPI bool sl_frame_step(void);
 SLAPI double sl_time(void);
 
 /** Get the time taken by the last frame (in seconds) */
-SLAPI double sl_frame_time(void);
+SLAPI double sl_frame_get_delta(void);
 
 /** Set target frame rate (FPS) */
-SLAPI void sl_frame_target(int fps);
+SLAPI void sl_frame_set_target_fps(int fps);
 
 /** Get current frame rate (FPS) */
-SLAPI int sl_frame_per_second(void);
+SLAPI int sl_frame_get_fps(void);
 
 /* --- Display ---- */
 
