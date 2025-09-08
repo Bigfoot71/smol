@@ -6,7 +6,7 @@
 int main(void)
 {
     sl_init("Smol - Canvas Example", WIN_W, WIN_H, 0);
-    sl_frame_target(60);
+    sl_frame_set_target_fps(60);
 
     sl_canvas_id canvas = sl_canvas_create(320, 240, SL_PIXEL_FORMAT_RGB8, false);
 
@@ -18,18 +18,18 @@ int main(void)
     int loc_time = sl_shader_uniform(shader, "u_time");
 
     while (sl_frame_step()) {
-        sl_render_canvas(canvas);
+        sl_render_set_canvas(canvas);
         {
-            sl_render_sampler(0, 0);
-            sl_render_shader(shader);
+            sl_render_set_sampler(0, 0);
+            sl_render_set_shader(shader);
 
-            sl_render_uniform1f(loc_time, sl_time());
+            sl_render_set_uniform1f(loc_time, sl_time());
             sl_render_rectangle(0, 0, 320, 240);
         }
-        sl_render_canvas(0);
+        sl_render_set_canvas(0);
         {
-            sl_render_sampler(0, color_target);
-            sl_render_shader(0);
+            sl_render_set_sampler(0, color_target);
+            sl_render_set_shader(0);
 
             float s = 1.0f + sinf(2.0f * sl_time()) * 0.5f;
 

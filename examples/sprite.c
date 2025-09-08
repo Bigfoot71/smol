@@ -46,9 +46,9 @@ void draw_sprite(sprite_t s, int frame, float x, float y, float scale)
         {{x+hw, y-hh}, {u+du, v   }, SL_WHITE}
     };
 
-    sl_render_sampler(0, s.texture);
+    sl_render_set_sampler(0, s.texture);
     sl_render_quad_list(q, 1);
-    sl_render_sampler(0, 0);
+    sl_render_set_sampler(0, 0);
 }
 
 // Just another way to draw sprites
@@ -66,22 +66,22 @@ void draw_sprite_ex(sprite_t s, int frame, float x, float y, float rot, float sc
 
     sl_render_texture_scale(SL_VEC2(du, dv));
     sl_render_texture_translate(SL_VEC2(u, v));
-    sl_render_sampler(0, s.texture);
+    sl_render_set_sampler(0, s.texture);
 
     sl_render_rectangle_ex(SL_VEC2(x, y), SL_VEC2(s.fw * scale, s.fh * scale), rot);
 
-    sl_render_sampler(0, 0);
+    sl_render_set_sampler(0, 0);
     sl_render_texture_identity();
 }
 
 int main(void)
 {
     sl_init("Smol - Sprite Example", WIN_W, WIN_H, 0);
-    sl_frame_target(60);
+    sl_frame_set_target_fps(60);
 
     sprite_t sprite = load_sprite(RESOURCES_PATH "spritesheet.png", 8, 3);
 
-    sl_render_blend(SL_BLEND_ALPHA);
+    sl_render_set_blend(SL_BLEND_ALPHA);
 
     while (sl_frame_step())
     {

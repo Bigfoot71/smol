@@ -7,14 +7,14 @@ int main(void)
 {
     sl_init("Smol - Shader Example", WIN_W, WIN_H, 0);
 
-    sl_frame_target(60);
+    sl_frame_set_target_fps(60);
 
     sl_shader_id shader = sl_shader_load(RESOURCES_PATH "raymarch.glsl");
     int loc_time = sl_shader_uniform(shader, "u_time");
-    sl_render_shader(shader);
+    sl_render_set_shader(shader);
 
     while (sl_frame_step()) {
-        sl_render_uniform1f(loc_time, sl_time());
+        sl_render_set_uniform1f(loc_time, sl_time());
         sl_render_rectangle(0, 0, WIN_W, WIN_H);
         sl_render_present();
     }

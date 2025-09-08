@@ -6,13 +6,13 @@
 int main(void)
 {
     sl_init("Smol - Texture Example", WIN_W, WIN_H, 0);
-    sl_frame_target(60);
+    sl_frame_set_target_fps(60);
 
     sl_texture_id texture = sl_texture_load(RESOURCES_PATH "emoji.png", NULL, NULL);
     sl_texture_parameters(texture, SL_FILTER_BILINEAR, SL_WRAP_CLAMP);
-    sl_render_sampler(0, texture);
+    sl_render_set_sampler(0, texture);
 
-    sl_render_blend(SL_BLEND_ALPHA);
+    sl_render_set_blend(SL_BLEND_ALPHA);
 
     while (sl_frame_step())
     {

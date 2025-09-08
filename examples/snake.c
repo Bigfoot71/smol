@@ -54,7 +54,7 @@ void update()
     if (sl_key_just_pressed(SL_KEY_LEFT) && dx != 1) { dx = -1; dy = 0; }
     if (sl_key_just_pressed(SL_KEY_RIGHT) && dx != -1) { dx = 1; dy = 0; }
     
-    timer += sl_frame_time();
+    timer += sl_frame_get_delta();
     if (timer < 0.15f) return;
     timer = 0;
     
@@ -82,26 +82,26 @@ void render()
     sl_render_clear(SL_BLACK);
     
     if (game_over) {
-        sl_render_color(SL_RED);
+        sl_render_set_color(SL_RED);
         sl_render_text_centered("GAME OVER", SL_VEC2(320, 200), 32, SL_VEC2(2, 2));
-        sl_render_color(SL_WHITE);
+        sl_render_set_color(SL_WHITE);
         sl_render_text_centered(sl_text_format("Score: %d - SPACE to restart", score), SL_VEC2(320, 250), 20, SL_VEC2(1, 1));
     }
     else {
-        sl_render_color(SL_COLOR(31, 31, 31, 255));
+        sl_render_set_color(SL_COLOR(31, 31, 31, 255));
         sl_render_grid(0, 0, 640, 480, 640 / GRID_SIZE, 480 / GRID_SIZE, 1.0f);
 
-        sl_render_color(SL_GREEN);
+        sl_render_set_color(SL_GREEN);
         for (int i = 0; i < length; i++) {
-            if (i == 0) sl_render_color(SL_WHITE);
+            if (i == 0) sl_render_set_color(SL_WHITE);
             sl_render_rectangle(snake[i].x * GRID_SIZE, snake[i].y * GRID_SIZE, GRID_SIZE-1, GRID_SIZE-1);
-            if (i == 0) sl_render_color(SL_GREEN);
+            if (i == 0) sl_render_set_color(SL_GREEN);
         }
         
-        sl_render_color(SL_RED);
+        sl_render_set_color(SL_RED);
         sl_render_rectangle(food.x * GRID_SIZE, food.y * GRID_SIZE, GRID_SIZE-1, GRID_SIZE-1);
         
-        sl_render_color(SL_YELLOW);
+        sl_render_set_color(SL_YELLOW);
         sl_render_text(sl_text_format("Score: %d", score), SL_VEC2(10, 10), 24, SL_VEC2(1, 1));
     }
     
@@ -111,10 +111,10 @@ void render()
 int main(void)
 {
     sl_init("Smol - Snake Example", 640, 480, 0);
-    sl_frame_target(60);
+    sl_frame_set_target_fps(60);
 
     sl_font_id font = sl_font_load(RESOURCES_PATH "font.ttf", SL_FONT_PIXEL, 32, 0, 0);
-    sl_render_font(font);
+    sl_render_set_font(font);
 
     init();
 

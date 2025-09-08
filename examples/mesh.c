@@ -13,13 +13,13 @@ static const sl_vertex_3d_t triangle[3] =
 int main(void)
 {
     sl_init("Smol - Mesh Example", WIN_W, WIN_H, 0);
-    sl_frame_target(60);
+    sl_frame_set_target_fps(60);
 
     sl_mesh_id mesh = sl_mesh_create(triangle, 3, NULL, 0);
 
     while (sl_frame_step()) {
         sl_render_clear(SL_BLACK);
-        sl_render_color(SL_RED);
+        sl_render_set_color(SL_RED);
         sl_render_mesh(mesh, 3);
         sl_render_present();
     }

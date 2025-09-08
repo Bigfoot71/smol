@@ -6,7 +6,7 @@
 int main(void)
 {
     sl_init("Smol - Basic Example", WIN_W, WIN_H, 0);
-    sl_frame_target(60);
+    sl_frame_set_target_fps(60);
 
     float dir = (SL_PI / 4) + (SL_PI / 2) * sl_randi_range(0, 4);
 
@@ -17,7 +17,7 @@ int main(void)
 
     while (sl_frame_step())
     {
-        float dt = sl_frame_time();
+        float dt = sl_frame_get_delta();
 
         p = sl_vec2_add(p, sl_vec2_scale(v, 256 * dt));
 
@@ -29,7 +29,7 @@ int main(void)
 
         sl_render_clear(SL_BLACK);
 
-        sl_render_color(SL_RED);
+        sl_render_set_color(SL_RED);
         sl_render_circle(p, radius, 24);
 
         sl_render_present();

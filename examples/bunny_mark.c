@@ -18,18 +18,18 @@ static int wabbit_count = 0;
 int main(void)
 {
     sl_init("Smol - Bunny Mark Example", WIN_W, WIN_H, 0);
-    sl_frame_target(60);
+    sl_frame_set_target_fps(60);
 
     sl_texture_id texture = sl_texture_load(RESOURCES_PATH "wabbit.png", NULL, NULL);
-    sl_render_sampler(0, texture);
+    sl_render_set_sampler(0, texture);
 
-    sl_render_blend(SL_BLEND_ALPHA);
+    sl_render_set_blend(SL_BLEND_ALPHA);
 
     while (sl_frame_step())
     {
-        sl_window_set_title(sl_text_format("Smol - Bunny Mark Example - Count: %i - FPS: %i", wabbit_count, sl_frame_per_second()));
+        sl_window_set_title(sl_text_format("Smol - Bunny Mark Example - Count: %i - FPS: %i", wabbit_count, sl_frame_get_fps()));
 
-        float dt = sl_frame_time();
+        float dt = sl_frame_get_delta();
 
         sl_render_clear(SL_GRAY);
 
@@ -72,7 +72,7 @@ int main(void)
                 wabbit->position.y = WIN_H;
             }
 
-            sl_render_color(wabbit->color);
+            sl_render_set_color(wabbit->color);
             sl_render_rectangle_ex(wabbit->position, SL_VEC2(32, 32), wabbit->rotation);
         }
 
