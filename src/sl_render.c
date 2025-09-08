@@ -393,14 +393,32 @@ static void sl__render_text(const sl__font_t* font, const char* text, float x, f
 
 /* === Public API === */
 
-void sl_render_viewport(int x, int y, int w, int h)
+void sl_render_flush(void)
+{
+    sl__render_flush_all();
+}
+
+void sl_render_present(void)
+{
+    sl__render_flush_all();
+
+    SDL_GL_SwapWindow(sl__core.window);
+}
+
+void sl_render_clear(sl_color_t color)
+{
+    glClearColor((float)color.r / 255.0f, (float)color.g / 255.0f, (float)color.b / 255.0f, (float)color.a / 255.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
+
+void sl_render_set_viewport(int x, int y, int w, int h)
 {
     sl__render_flush_all();
 
     glViewport(x, y, w, h);
 }
 
-void sl_render_scissor(int x, int y, int w, int h)
+void sl_render_set_scissor(int x, int y, int w, int h)
 {
     sl__render_flush_all();
 
@@ -413,7 +431,7 @@ void sl_render_scissor(int x, int y, int w, int h)
     }
 }
 
-void sl_render_stencil(sl_stencil_func_t func, int ref, uint32_t mask,
+void sl_render_set_stencil(sl_stencil_func_t func, int ref, uint32_t mask,
                        sl_stencil_op_t sfail, sl_stencil_op_t dpfail,
                        sl_stencil_op_t dppass)
 {
@@ -450,46 +468,28 @@ void sl_render_stencil(sl_stencil_func_t func, int ref, uint32_t mask,
     glStencilOp(op_table[sfail], op_table[dpfail], op_table[dppass]);
 }
 
-void sl_render_clear(sl_color_t color)
-{
-    glClearColor((float)color.r / 255.0f, (float)color.g / 255.0f, (float)color.b / 255.0f, (float)color.a / 255.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-}
-
-void sl_render_flush(void)
-{
-    sl__render_flush_all();
-}
-
-void sl_render_present(void)
-{
-    sl__render_flush_all();
-
-    SDL_GL_SwapWindow(sl__core.window);
-}
-
-void sl_render_depth_test(bool enabled)
+void sl_render_set_depth_test(bool enabled)
 {
     sl__render_flush_all();
 
     (enabled ? glEnable : glDisable)(GL_DEPTH_TEST);
 }
 
-void sl_render_depth_write(bool enabled)
+void sl_render_set_depth_write(bool enabled)
 {
     sl__render_flush_all();
 
     glDepthMask(enabled);
 }
 
-void sl_render_depth_range(float near, float far)
+void sl_render_set_depth_range(float near, float far)
 {
     sl__render_flush_all();
 
     glDepthRangef(near, far);
 }
 
-void sl_render_cull_face(sl_cull_mode_t cull)
+void sl_render_set_cull_face(sl_cull_mode_t cull)
 {
     sl__render_flush_all();
 
@@ -502,12 +502,12 @@ void sl_render_cull_face(sl_cull_mode_t cull)
     }
 }
 
-void sl_render_color(sl_color_t color)
+void sl_render_set_color(sl_color_t color)
 {
     sl__render.current_color = color;
 }
 
-void sl_render_sampler(uint32_t slot, sl_texture_id texture)
+void sl_render_set_sampler(uint32_t slot, sl_texture_id texture)
 {
     if (texture == 0) {
         texture = sl__render.default_texture;
@@ -521,14 +521,14 @@ void sl_render_sampler(uint32_t slot, sl_texture_id texture)
     }
 }
 
-void sl_render_font(sl_font_id font)
+void sl_render_set_font(sl_font_id font)
 {
     // NOTE: No default font
     // Without font no text will be rendered
     sl__render.current_font = font;
 }
 
-void sl_render_shader(sl_shader_id shader)
+void sl_render_set_shader(sl_shader_id shader)
 {
     if (shader == 0) {
         shader = sl__render.default_shader;
@@ -543,12 +543,12 @@ void sl_render_shader(sl_shader_id shader)
     sl__render.current_shader = shader;
 }
 
-void sl_render_blend(sl_blend_mode_t blend)
+void sl_render_set_blend(sl_blend_mode_t blend)
 {
     sl__render.current_blend_mode = blend;
 }
 
-void sl_render_canvas(sl_canvas_id canvas)
+void sl_render_set_canvas(sl_canvas_id canvas)
 {
     if (sl__render.current_canvas == canvas) {
         return;
@@ -579,84 +579,84 @@ void sl_render_canvas(sl_canvas_id canvas)
     }
 }
 
-void sl_render_uniform1i(int uniform, int32_t x)
+void sl_render_set_uniform1i(int uniform, int32_t x)
 {
     if (uniform >= 0) {
         glUniform1i(uniform, x);
     }
 }
 
-void sl_render_uniform2i(int uniform, int32_t x, int32_t y)
+void sl_render_set_uniform2i(int uniform, int32_t x, int32_t y)
 {
     if (uniform >= 0) {
         glUniform2i(uniform, x, y);
     }
 }
 
-void sl_render_uniform3i(int uniform, int32_t x, int32_t y, int32_t z)
+void sl_render_set_uniform3i(int uniform, int32_t x, int32_t y, int32_t z)
 {
     if (uniform >= 0) {
         glUniform3i(uniform, x, y, z);
     }
 }
 
-void sl_render_uniform4i(int uniform, int32_t x, int32_t y, int32_t z, int32_t w)
+void sl_render_set_uniform4i(int uniform, int32_t x, int32_t y, int32_t z, int32_t w)
 {
     if (uniform >= 0) {
         glUniform4i(uniform, x, y, z, w);
     }
 }
 
-void sl_render_uniform1f(int uniform, float x)
+void sl_render_set_uniform1f(int uniform, float x)
 {
     if (uniform >= 0) {
         glUniform1f(uniform, x);
     }
 }
 
-void sl_render_uniform2f(int uniform, float x, float y)
+void sl_render_set_uniform2f(int uniform, float x, float y)
 {
     if (uniform >= 0) {
         glUniform2f(uniform, x, y);
     }
 }
 
-void sl_render_uniform3f(int uniform, float x, float y, float z)
+void sl_render_set_uniform3f(int uniform, float x, float y, float z)
 {
     if (uniform >= 0) {
         glUniform3f(uniform, x, y, z);
     }
 }
 
-void sl_render_uniform4f(int uniform, float x, float y, float z, float w)
+void sl_render_set_uniform4f(int uniform, float x, float y, float z, float w)
 {
     if (uniform >= 0) {
         glUniform4f(uniform, x, y, z, w);
     }
 }
 
-void sl_render_uniform_vec2(int uniform, const sl_vec2_t* v, int count)
+void sl_render_set_uniform_vec2(int uniform, const sl_vec2_t* v, int count)
 {
     if (uniform >= 0) {
         glUniform2fv(uniform, count, (float*)v);
     }
 }
 
-void sl_render_uniform_vec3(int uniform, const sl_vec3_t* v, int count)
+void sl_render_set_uniform_vec3(int uniform, const sl_vec3_t* v, int count)
 {
     if (uniform >= 0) {
         glUniform3fv(uniform, count, (float*)v);
     }
 }
 
-void sl_render_uniform_vec4(int uniform, const sl_vec4_t* v, int count)
+void sl_render_set_uniform_vec4(int uniform, const sl_vec4_t* v, int count)
 {
     if (uniform >= 0) {
         glUniform4fv(uniform, count, (float*)v);
     }
 }
 
-void sl_render_uniform_color3(int uniform, sl_color_t color)
+void sl_render_set_uniform_color3(int uniform, sl_color_t color)
 {
     if (uniform >= 0) {
         glUniform3f(
@@ -668,7 +668,7 @@ void sl_render_uniform_color3(int uniform, sl_color_t color)
     }
 }
 
-void sl_render_uniform_color4(int uniform, sl_color_t color)
+void sl_render_set_uniform_color4(int uniform, sl_color_t color)
 {
     if (uniform >= 0) {
         glUniform4f(
@@ -681,28 +681,28 @@ void sl_render_uniform_color4(int uniform, sl_color_t color)
     }
 }
 
-void sl_render_uniform_mat2(int uniform, float* v, int count)
+void sl_render_set_uniform_mat2(int uniform, float* v, int count)
 {
     if (uniform >= 0 && v) {
         glUniformMatrix2fv(uniform, count, GL_FALSE, v);
     }
 }
 
-void sl_render_uniform_mat3(int uniform, float* v, int count)
+void sl_render_set_uniform_mat3(int uniform, float* v, int count)
 {
     if (uniform >= 0 && v) {
         glUniformMatrix3fv(uniform, count, GL_FALSE, v);
     }
 }
 
-void sl_render_uniform_mat4(int uniform, float* v, int count)
+void sl_render_set_uniform_mat4(int uniform, float* v, int count)
 {
     if (uniform >= 0 && v) {
         glUniformMatrix4fv(uniform, count, GL_FALSE, v);
     }
 }
 
-void sl_render_projection(const sl_mat4_t* matrix)
+void sl_render_set_projection(const sl_mat4_t* matrix)
 {
     sl__render_flush_all();
 
@@ -717,7 +717,7 @@ void sl_render_projection(const sl_mat4_t* matrix)
     }
 }
 
-void sl_render_view(const sl_mat4_t* matrix)
+void sl_render_set_view(const sl_mat4_t* matrix)
 {
     sl__render_flush_all();
 
@@ -787,10 +787,15 @@ void sl_render_scale(sl_vec3_t v)
     sl__render.transform_is_identity = false;
 }
 
-void sl_render_transform(const sl_mat4_t* matrix)
+void sl_render_set_transform(const sl_mat4_t* matrix)
 {
     sl__render.matrix_transform = sl_mat4_mul(&sl__render.matrix_transform, matrix);
     sl__render.transform_is_identity = false;
+}
+
+sl_mat4_t sl_render_get_transform(void)
+{
+    return sl__render.matrix_transform;
 }
 
 void sl_render_texture_identity(void)

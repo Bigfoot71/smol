@@ -901,32 +901,6 @@ SLAPI void sl_free(void* ptr);
  */
 
 /**
- * Set specific viewport dimensions
- * Automatically flushes the batch
- */
-SLAPI void sl_render_viewport(int x, int y, int w, int h);
-
-/**
- * Enable and set scissor rectangle
- * Pass (0,0,0,0) to disable scissor
- * Automatically flushes the batch
- */
-SLAPI void sl_render_scissor(int x, int y, int w, int h);
-
-/**
- * Set stencil function and operations
- * Use SL_STENCIL_DISABLE to disable stencil
- * For framebuffers, ensure depth is enabled
- * Automatically flushes the batch
- */
-SLAPI void sl_render_stencil(sl_stencil_func_t func, int ref, uint32_t mask,
-                             sl_stencil_op_t sfail, sl_stencil_op_t dpfail,
-                             sl_stencil_op_t dppass);
-
-/** Clear the screen or current canvas with specified color */
-SLAPI void sl_render_clear(sl_color_t color);
-
-/**
  * Flush the batch: upload data and draw
  * Useful for specific cases, e.g., updating a shader uniform between draws
  */
@@ -935,115 +909,141 @@ SLAPI void sl_render_flush(void);
 /** Flush the batch and present the frame to the screen */
 SLAPI void sl_render_present(void);
 
+/** Clear the screen or current canvas with specified color */
+SLAPI void sl_render_clear(sl_color_t color);
+
+/**
+ * Set specific viewport dimensions
+ * Automatically flushes the batch
+ */
+SLAPI void sl_render_set_viewport(int x, int y, int w, int h);
+
+/**
+ * Enable and set scissor rectangle
+ * Pass (0,0,0,0) to disable scissor
+ * Automatically flushes the batch
+ */
+SLAPI void sl_render_set_scissor(int x, int y, int w, int h);
+
+/**
+ * Set stencil function and operations
+ * Use SL_STENCIL_DISABLE to disable stencil
+ * For framebuffers, ensure depth is enabled
+ * Automatically flushes the batch
+ */
+SLAPI void sl_render_set_stencil(sl_stencil_func_t func, int ref, uint32_t mask,
+                                 sl_stencil_op_t sfail, sl_stencil_op_t dpfail,
+                                 sl_stencil_op_t dppass);
+
 /** Enable or disable depth testing
  * Automatically flushes the batch
  */
-SLAPI void sl_render_depth_test(bool enabled);
+SLAPI void sl_render_set_depth_test(bool enabled);
 
 /** Enable or disable writing to the depth buffer
  * Automatically flushes the batch
  */
-SLAPI void sl_render_depth_write(bool enabled);
+SLAPI void sl_render_set_depth_write(bool enabled);
 
 /** Set the minimum and maximum depth values
  * Automatically flushes the batch
  */
-SLAPI void sl_render_depth_range(float near, float far);
+SLAPI void sl_render_set_depth_range(float near, float far);
 
 /** Set which faces to cull during rendering
  * Automatically flushes the batch
  */
-SLAPI void sl_render_cull_face(sl_cull_mode_t cull);
+SLAPI void sl_render_set_cull_face(sl_cull_mode_t cull);
 
 /** Set the modulation color for the batch
  * Applied per-vertex, does not affect batching
  */
-SLAPI void sl_render_color(sl_color_t color);
+SLAPI void sl_render_set_color(sl_color_t color);
 
 /** Bind a texture to a slot
  * Slot 0 is default for all shaders
  * Modifying slot 0 may trigger a new draw call for the next primitive
  * Other slots modify pipeline state immediately; manual flush may be needed
  */
-SLAPI void sl_render_sampler(uint32_t slot, sl_texture_id texture);
+SLAPI void sl_render_set_sampler(uint32_t slot, sl_texture_id texture);
 
 /** Set the font for text rendering
  * Zero disables text rendering
  * Text draw calls are separate; group multiple texts with same font in one draw
  */
-SLAPI void sl_render_font(sl_font_id font);
+SLAPI void sl_render_set_font(sl_font_id font);
 
 /** Set the shader to use
  * Zero applies default shader
  * May trigger a new draw call for the next primitive
  * Activates shader immediately for uniform updates
  */
-SLAPI void sl_render_shader(sl_shader_id shader);
+SLAPI void sl_render_set_shader(sl_shader_id shader);
 
 /** Set the blend mode
  * May trigger a new draw call for the next primitive
  */
-SLAPI void sl_render_blend(sl_blend_mode_t blend);
+SLAPI void sl_render_set_blend(sl_blend_mode_t blend);
 
 /** Set the canvas to render to
  * Zero renders to screen
  * Automatically flushes the batch
  */
-SLAPI void sl_render_canvas(sl_canvas_id canvas);
+SLAPI void sl_render_set_canvas(sl_canvas_id canvas);
 
 /**
  * Set integer uniforms
  * Does NOT trigger a new draw call; manual flush may be needed
  */
-SLAPI void sl_render_uniform1i(int uniform, int32_t x);
-SLAPI void sl_render_uniform2i(int uniform, int32_t x, int32_t y);
-SLAPI void sl_render_uniform3i(int uniform, int32_t x, int32_t y, int32_t z);
-SLAPI void sl_render_uniform4i(int uniform, int32_t x, int32_t y, int32_t z, int32_t w);
+SLAPI void sl_render_set_uniform1i(int uniform, int32_t x);
+SLAPI void sl_render_set_uniform2i(int uniform, int32_t x, int32_t y);
+SLAPI void sl_render_set_uniform3i(int uniform, int32_t x, int32_t y, int32_t z);
+SLAPI void sl_render_set_uniform4i(int uniform, int32_t x, int32_t y, int32_t z, int32_t w);
 
 /**
  * Set float uniforms
  * Does NOT trigger a new draw call; manual flush may be needed
  */
-SLAPI void sl_render_uniform1f(int uniform, float x);
-SLAPI void sl_render_uniform2f(int uniform, float x, float y);
-SLAPI void sl_render_uniform3f(int uniform, float x, float y, float z);
-SLAPI void sl_render_uniform4f(int uniform, float x, float y, float z, float w);
+SLAPI void sl_render_set_uniform1f(int uniform, float x);
+SLAPI void sl_render_set_uniform2f(int uniform, float x, float y);
+SLAPI void sl_render_set_uniform3f(int uniform, float x, float y, float z);
+SLAPI void sl_render_set_uniform4f(int uniform, float x, float y, float z, float w);
 
 /**
  * Set vector uniforms
  * Does NOT trigger a new draw call; manual flush may be needed
  */
-SLAPI void sl_render_uniform_vec2(int uniform, const sl_vec2_t* v, int count);
-SLAPI void sl_render_uniform_vec3(int uniform, const sl_vec3_t* v, int count);
-SLAPI void sl_render_uniform_vec4(int uniform, const sl_vec4_t* v, int count);
+SLAPI void sl_render_set_uniform_vec2(int uniform, const sl_vec2_t* v, int count);
+SLAPI void sl_render_set_uniform_vec3(int uniform, const sl_vec3_t* v, int count);
+SLAPI void sl_render_set_uniform_vec4(int uniform, const sl_vec4_t* v, int count);
 
 /** Normalize color and set as vec3 uniform */
-SLAPI void sl_render_uniform_color3(int uniform, sl_color_t color);
+SLAPI void sl_render_set_uniform_color3(int uniform, sl_color_t color);
 
 /** Normalize color and set as vec4 uniform */
-SLAPI void sl_render_uniform_color4(int uniform, sl_color_t color);
+SLAPI void sl_render_set_uniform_color4(int uniform, sl_color_t color);
 
 /**
  * Set matrix uniforms
  * Does NOT trigger a new draw call; manual flush may be needed
  */
-SLAPI void sl_render_uniform_mat2(int uniform, float* v, int count);
-SLAPI void sl_render_uniform_mat3(int uniform, float* v, int count);
-SLAPI void sl_render_uniform_mat4(int uniform, float* v, int count);
+SLAPI void sl_render_set_uniform_mat2(int uniform, float* v, int count);
+SLAPI void sl_render_set_uniform_mat3(int uniform, float* v, int count);
+SLAPI void sl_render_set_uniform_mat4(int uniform, float* v, int count);
 
 /**
  * Set projection matrix
  * NULL restores default orthographic projection
  * Automatically flushes the batch
  */
-SLAPI void sl_render_projection(const sl_mat4_t* matrix);
+SLAPI void sl_render_set_projection(const sl_mat4_t* matrix);
 
 /**
  * Set view matrix
  * NULL restores identity
  * Automatically flushes the batch
  */
-SLAPI void sl_render_view(const sl_mat4_t* matrix);
+SLAPI void sl_render_set_view(const sl_mat4_t* matrix);
 
 /**
  * Push a new transform matrix onto the stack, inheriting the previous one.
@@ -1086,7 +1086,12 @@ SLAPI void sl_render_scale(sl_vec3_t v);
  * Apply a custom matrix to the current transform.
  * @param matrix Matrix to multiply with current transform
  */
-SLAPI void sl_render_transform(const sl_mat4_t* matrix);
+SLAPI void sl_render_set_transform(const sl_mat4_t* matrix);
+
+/**
+ * Get current transform matrix.
+ */
+SLAPI sl_mat4_t sl_render_get_transform(void);
 
 /** Reset texture transform to identity */
 SLAPI void sl_render_texture_identity(void);
