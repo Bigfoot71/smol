@@ -28,43 +28,39 @@ float sl_audio_get_volume_master(void)
     return sl__audio.volume_master;
 }
 
-float sl_audio_get_volume_music(void)
+float sl_aduio_get_volume_stream(void)
 {
-    return sl__audio.volume_music;
+    return sl__audio.volume_stream;
 }
 
-float sl_audio_get_volume_sound(void)
+float sl_audio_get_volume_sample(void)
 {
-    return sl__audio.volume_sound;
+    return sl__audio.volume_sample;
 }
 
 void sl_audio_set_volume_master(float volume)
 {
     sl__audio.volume_master = SL_CLAMP(volume, 0.0f, 1.0f);
 
-    sl__audio_update_all_sound_volumes();
+    sl__audio_update_all_sample_volumes();
 
-    SDL_LockMutex(sl__audio.music_mutex);
-    if (sl__audio.current_music != 0) {
-        sl__audio_update_music_volume(sl__audio.current_music);
-    }
-    SDL_UnlockMutex(sl__audio.music_mutex);
+    SDL_LockMutex(sl__audio.stream_mutex);
+    sl__audio_update_all_stream_volumes();
+    SDL_UnlockMutex(sl__audio.stream_mutex);
 }
 
-void sl_audio_set_volume_music(float volume)
+void sl_audio_set_volume_stream(float volume)
 {
-    sl__audio.volume_music = SL_CLAMP(volume, 0.0f, 1.0f);
+    sl__audio.volume_stream = SL_CLAMP(volume, 0.0f, 1.0f);
 
-    SDL_LockMutex(sl__audio.music_mutex);
-    if (sl__audio.current_music != 0) {
-        sl__audio_update_music_volume(sl__audio.current_music);
-    }
-    SDL_UnlockMutex(sl__audio.music_mutex);
+    SDL_LockMutex(sl__audio.stream_mutex);
+    sl__audio_update_all_stream_volumes();
+    SDL_UnlockMutex(sl__audio.stream_mutex);
 }
 
-void sl_audio_set_volume_sound(float volume)
+void sl_audio_set_volume_sample(float volume)
 {
-    sl__audio.volume_sound = SL_CLAMP(volume, 0.0f, 1.0f);
+    sl__audio.volume_sample = SL_CLAMP(volume, 0.0f, 1.0f);
 
-    sl__audio_update_all_sound_volumes();
+    sl__audio_update_all_sample_volumes();
 }

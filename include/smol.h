@@ -475,8 +475,8 @@ typedef uint32_t sl_shader_id;
 typedef uint32_t sl_mesh_id;
 typedef uint32_t sl_font_id;
 
-typedef uint32_t sl_sound_id;
-typedef uint32_t sl_music_id;
+typedef uint32_t sl_sample_id;
+typedef uint32_t sl_stream_id;
 
 /* === Macros === */
 
@@ -1895,16 +1895,16 @@ SLAPI void sl_font_measure_codepoints(float* w, float* h, sl_font_id font, const
 SLAPI float sl_audio_get_volume_master(void);
 
 /**
- * @brief Get the music volume
- * @return Music volume (0.0 = mute, 1.0 = max)
+ * @brief Get the global stream volume
+ * @return Stream volume (0.0 = mute, 1.0 = max)
  */
-SLAPI float sl_audio_get_volume_music(void);
+SLAPI float sl_aduio_get_volume_stream(void);
 
 /**
- * @brief Get the sound effects volume
- * @return Sound volume (0.0 = mute, 1.0 = max)
+ * @brief Get the global sample volume
+ * @return Sample volume (0.0 = mute, 1.0 = max)
  */
-SLAPI float sl_audio_get_volume_sound(void);
+SLAPI float sl_audio_get_volume_sample(void);
 
 /**
  * @brief Set the master volume
@@ -1913,145 +1913,145 @@ SLAPI float sl_audio_get_volume_sound(void);
 SLAPI void sl_audio_set_volume_master(float volume);
 
 /**
- * @brief Set the music volume
+ * @brief Set the global stream volume
  * @param volume Volume value (0.0 = mute, 1.0 = max)
  */
-SLAPI void sl_audio_set_volume_music(float volume);
+SLAPI void sl_audio_set_volume_stream(float volume);
 
 /**
- * @brief Set the sound effects volume
+ * @brief Set the global sample volume
  * @param volume Volume value (0.0 = mute, 1.0 = max)
  */
-SLAPI void sl_audio_set_volume_sound(float volume);
+SLAPI void sl_audio_set_volume_sample(float volume);
 
 /** @} */ // Audio
 
-/* === Sound Functions === */
+/* === Sample Functions === */
 
-/** @defgroup Sound Sound Functions
- *  Sound effects with channel-based polyphony.
+/** @defgroup Sample Sample Functions
+ *  Sample effects with channel-based polyphony.
  *  @{
  */
 
 /**
- * @brief Load a sound from a file
- * @param file_path Path to the sound file (supports WAV, FLAC, MP3, OGG)
+ * @brief Load a sample from a file
+ * @param file_path Path to the sample file (supports WAV, FLAC, MP3, OGG)
  * @param channel_count Number of channels for polyphony (must be > 0)
- * @return Sound ID on success, 0 on failure
+ * @return Sample ID on success, 0 on failure
  */
-SLAPI sl_sound_id sl_sound_load(const char* file_path, int channel_count);
+SLAPI sl_sample_id sl_sample_load(const char* file_path, int channel_count);
 
 /**
- * @brief Destroy a loaded sound and free all associated resources
- * @param sound_id Sound ID to destroy
+ * @brief Destroy a loaded sample and free all associated resources
+ * @param sample_id Sample ID to destroy
  */
-SLAPI void sl_sound_destroy(sl_sound_id sound_id);
+SLAPI void sl_sample_destroy(sl_sample_id sample_id);
 
 /**
- * @brief Play a sound on a specific channel or automatically find a free one
- * @param sound_id Sound ID to play
+ * @brief Play a sample on a specific channel or automatically find a free one
+ * @param sample_id Sample ID to play
  * @param channel Channel index (>= 0) or negative value to auto-select first available channel
- * @return Channel index where the sound is played, or -1 if no channel is available
+ * @return Channel index where the sample is played, or -1 if no channel is available
  */
-SLAPI int sl_sound_play(sl_sound_id sound_id, int channel);
+SLAPI int sl_sample_play(sl_sample_id sample_id, int channel);
 
 /**
- * @brief Pause a sound on a specific channel or all channels
- * @param sound_id Sound ID to pause
+ * @brief Pause a sample on a specific channel or all channels
+ * @param sample_id Sample ID to pause
  * @param channel Channel index (>= 0) to pause specific channel, or negative value to pause all channels
  */
-SLAPI void sl_sound_pause(sl_sound_id sound_id, int channel);
+SLAPI void sl_sample_pause(sl_sample_id sample_id, int channel);
 
 /**
- * @brief Stop a sound on a specific channel or all channels
- * @param sound_id Sound ID to stop
+ * @brief Stop a sample on a specific channel or all channels
+ * @param sample_id Sample ID to stop
  * @param channel Channel index (>= 0) to stop specific channel, or negative value to stop all channels
  */
-SLAPI void sl_sound_stop(sl_sound_id sound_id, int channel);
+SLAPI void sl_sample_stop(sl_sample_id sample_id, int channel);
 
 /**
- * @brief Rewind a sound on a specific channel or all channels
- * @param sound_id Sound ID to rewind
+ * @brief Rewind a sample on a specific channel or all channels
+ * @param sample_id Sample ID to rewind
  * @param channel Channel index (>= 0) to rewind specific channel, or negative value to rewind all channels
  */
-SLAPI void sl_sound_rewind(sl_sound_id sound_id, int channel);
+SLAPI void sl_sample_rewind(sl_sample_id sample_id, int channel);
 
 /**
- * @brief Check if a sound is playing on a specific channel or any channel
- * @param sound_id Sound ID to check
+ * @brief Check if a sample is playing on a specific channel or any channel
+ * @param sample_id Sample ID to check
  * @param channel Channel index (>= 0) to check specific channel, or negative value to check if playing on any channel
- * @return true if sound is playing on the specified channel(s), false otherwise
+ * @return true if sample is playing on the specified channel(s), false otherwise
  */
-SLAPI bool sl_sound_is_playing(sl_sound_id sound_id, int channel);
+SLAPI bool sl_sample_is_playing(sl_sample_id sample_id, int channel);
 
 /**
- * @brief Get the number of channels assigned to a sound
- * @param sound_id Sound ID
- * @return Number of channels, or 0 if sound ID is invalid
+ * @brief Get the number of channels assigned to a sample
+ * @param sample_id Sample ID
+ * @return Number of channels, or 0 if sample ID is invalid
  */
-SLAPI int sl_sound_get_channel_count(sl_sound_id sound_id);
+SLAPI int sl_sample_get_channel_count(sl_sample_id sample_id);
 
-/** @} */ // Sound
+/** @} */ // Sample
 
-/* === Music Functions === */
+/* === Stream Functions === */
 
-/** @defgroup Music Music Functions
- *  Background music playback and control.
+/** @defgroup Stream Stream Functions
+ *  Background stream playback and control.
  *  @{
  */
 
 /**
- * @brief Load music from a file
- * @param file_path Path to the music file
- * @return Music ID on success, 0 or invalid ID on failure
+ * @brief Load stream from a file
+ * @param file_path Path to the stream file
+ * @return Stream ID on success, 0 or invalid ID on failure
  */
-SLAPI sl_music_id sl_music_load(const char* file_path);
+SLAPI sl_stream_id sl_stream_load(const char* file_path);
 
 /**
- * @brief Destroy loaded music
- * @param music Music ID
+ * @brief Destroy loaded stream
+ * @param stream Stream ID
  */
-SLAPI void sl_music_destroy(sl_music_id music);
+SLAPI void sl_stream_destroy(sl_stream_id stream);
 
 /**
- * @brief Play music
- * @param music Music ID
+ * @brief Play stream
+ * @param stream Stream ID
  */
-SLAPI void sl_music_play(sl_music_id music);
+SLAPI void sl_stream_play(sl_stream_id stream);
 
 /**
- * @brief Pause music
- * @param music Music ID
+ * @brief Pause stream
+ * @param stream Stream ID
  */
-SLAPI void sl_music_pause(sl_music_id music);
+SLAPI void sl_stream_pause(sl_stream_id stream);
 
 /**
- * @brief Stop music
- * @param music Music ID
+ * @brief Stop stream
+ * @param stream Stream ID
  */
-SLAPI void sl_music_stop(sl_music_id music);
+SLAPI void sl_stream_stop(sl_stream_id stream);
 
 /**
- * @brief Rewind music to the beginning
- * @param music Music ID
+ * @brief Rewind stream to the beginning
+ * @param stream Stream ID
  */
-SLAPI void sl_music_rewind(sl_music_id music);
+SLAPI void sl_stream_rewind(sl_stream_id stream);
 
 /**
- * @brief Check if music is currently playing
- * @param music Music ID
+ * @brief Check if stream is currently playing
+ * @param stream Stream ID
  * @return true if playing, false otherwise
  */
-SLAPI bool sl_music_is_playing(sl_music_id music);
+SLAPI bool sl_stream_is_playing(sl_stream_id stream);
 
 /**
- * @brief Enable or disable looping for music
- * @param music Music ID
+ * @brief Enable or disable looping for stream
+ * @param stream Stream ID
  * @param loop true to loop continuously, false to stop at the end
  */
-SLAPI void sl_music_loop(sl_music_id music, bool loop);
+SLAPI void sl_stream_loop(sl_stream_id stream, bool loop);
 
-/** @} */ // Music
+/** @} */ // Stream
 
 /* === Text Functions === */
 
