@@ -684,21 +684,21 @@ void sl_render_set_uniform_color4(int uniform, sl_color_t color)
 void sl_render_set_uniform_mat2(int uniform, float* v, int count)
 {
     if (uniform >= 0 && v) {
-        glUniformMatrix2fv(uniform, count, GL_FALSE, v);
+        glUniformMatrix2fv(uniform, count, GL_TRUE, v);
     }
 }
 
 void sl_render_set_uniform_mat3(int uniform, float* v, int count)
 {
     if (uniform >= 0 && v) {
-        glUniformMatrix3fv(uniform, count, GL_FALSE, v);
+        glUniformMatrix3fv(uniform, count, GL_TRUE, v);
     }
 }
 
 void sl_render_set_uniform_mat4(int uniform, float* v, int count)
 {
     if (uniform >= 0 && v) {
-        glUniformMatrix4fv(uniform, count, GL_FALSE, v);
+        glUniformMatrix4fv(uniform, count, GL_TRUE, v);
     }
 }
 
