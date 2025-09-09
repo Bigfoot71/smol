@@ -36,11 +36,11 @@ Using ANGLE as a backend can be automated as well.
 
 ### Audio
 
-- Support for sound and music loading (WAV/FLAC/MP3/OGG)
+- Audio support with samples and streams (WAV/FLAC/MP3/OGG)
 - Built on [mojoAL](https://github.com/icculus/mojoAL) (OpenAL 1.1)
-- Polyphony for sounds (choose the number of 'channels' at load time)
-- Music decoding is asynchronous and automatically updated
-- Volume control for sounds, music, and a master factor (all globaly applied)
+- Polyphony for samples (choose the number of 'channels' at load time)
+- Stream decoding is asynchronous and automatically updated
+- Volume control for samples, stream, and a master factor (all globaly applied)
 
 ### Resources
 
@@ -50,8 +50,8 @@ Most resources in Smol are managed by **ID handles**:
   - `sl_shader_id`
   - `sl_mesh_id`
   - `sl_font_id`
-  - `sl_sound_id`
-  - `sl_music_id`
+  - `sl_sample_id`
+  - `sl_stream_id`
 
 These resources are automatically destroyed on shutdown, so you don’t need to free them manually.
 
