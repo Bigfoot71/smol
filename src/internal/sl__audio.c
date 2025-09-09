@@ -76,6 +76,21 @@ struct sl__audio sl__audio = { 0 };
 
 bool sl__audio_init(void)
 {
+    /* --- Initialize decode buffer pool --- */
+
+    if (!sl__audio_init_buffer_pool()) {
+        sl_loge("AUDIO: Failed to initialize decode buffer pool");
+        return false;
+    }
+
+    /* --- Initialize active musics list --- */
+
+    if (!sl__audio_init_active_musics()) {
+        sl_loge("AUDIO: Failed to initialize active musics list");
+        sl__audio_cleanup_buffer_pool();
+        return false;
+    }
+
     /* --- Create registries --- */
 
     sl__audio.reg_sounds = sl__registry_create(16, sizeof(sl__sound_t));
@@ -139,6 +154,14 @@ void sl__audio_quit(void)
 
     sl__registry_destroy(&sl__audio.reg_musics);
     sl__registry_destroy(&sl__audio.reg_sounds);
+
+    /* --- Cleanup active musics list --- */
+
+    sl__audio_cleanup_active_musics();
+
+    /* --- Cleanup decode buffer pool --- */
+
+    sl__audio_cleanup_buffer_pool();
 
     /* --- Close OpenAL device and context --- */
 
@@ -301,6 +324,173 @@ void sl__audio_update_music_volume(sl_music_id music_id)
     
     float final_volume = sl__audio_calculate_final_music_volume(music->volume);
     alSourcef(music->source, AL_GAIN, final_volume);
+}
+
+/* === Buffer Pool Functions === */
+
+bool sl__audio_init_buffer_pool(void)
+{
+    sl__audio.decode_buffer_pool = NULL;
+    sl__audio.decode_buffer_in_use = NULL;
+    sl__audio.decode_buffer_count = 0;
+    sl__audio.decode_buffer_capacity = 0;
+    sl__audio.decode_buffer_pool_size = SL__MUSIC_BUFFER_SIZE;
+    
+    return sl__audio_ensure_buffer_pool_capacity(4);
+}
+
+void sl__audio_cleanup_buffer_pool(void)
+{
+    if (sl__audio.decode_buffer_pool) {
+        for (size_t i = 0; i < sl__audio.decode_buffer_count; i++) {
+            if (sl__audio.decode_buffer_pool[i]) {
+                SDL_free(sl__audio.decode_buffer_pool[i]);
+            }
+        }
+        SDL_free(sl__audio.decode_buffer_pool);
+        sl__audio.decode_buffer_pool = NULL;
+    }
+    
+    if (sl__audio.decode_buffer_in_use) {
+        SDL_free(sl__audio.decode_buffer_in_use);
+        sl__audio.decode_buffer_in_use = NULL;
+    }
+    
+    sl__audio.decode_buffer_count = 0;
+    sl__audio.decode_buffer_capacity = 0;
+}
+
+bool sl__audio_ensure_buffer_pool_capacity(size_t needed_capacity)
+{
+    if (needed_capacity <= sl__audio.decode_buffer_capacity) {
+        return true;
+    }
+    
+    // Reallocate arrays
+    int16_t** new_pool = SDL_realloc(sl__audio.decode_buffer_pool, 
+                                     needed_capacity * sizeof(int16_t*));
+    if (!new_pool) return false;
+    
+    bool* new_in_use = SDL_realloc(sl__audio.decode_buffer_in_use, 
+                                   needed_capacity * sizeof(bool));
+    if (!new_in_use) return false;
+    
+    sl__audio.decode_buffer_pool = new_pool;
+    sl__audio.decode_buffer_in_use = new_in_use;
+    
+    // Initialize new slots
+    for (size_t i = sl__audio.decode_buffer_capacity; i < needed_capacity; i++) {
+        sl__audio.decode_buffer_pool[i] = NULL;
+        sl__audio.decode_buffer_in_use[i] = false;
+    }
+    
+    sl__audio.decode_buffer_capacity = needed_capacity;
+    return true;
+}
+
+int sl__audio_acquire_decode_buffer(void)
+{
+    // Find available buffer
+    for (size_t i = 0; i < sl__audio.decode_buffer_count; i++) {
+        if (!sl__audio.decode_buffer_in_use[i]) {
+            sl__audio.decode_buffer_in_use[i] = true;
+            return (int)i;
+        }
+    }
+    
+    // Need to create new buffer
+    if (sl__audio.decode_buffer_count >= sl__audio.decode_buffer_capacity) {
+        if (!sl__audio_ensure_buffer_pool_capacity(sl__audio.decode_buffer_capacity * 2)) {
+            return -1;
+        }
+    }
+    
+    // Allocate new buffer
+    int16_t* new_buffer = SDL_malloc(sl__audio.decode_buffer_pool_size);
+    if (!new_buffer) return -1;
+    
+    int index = (int)sl__audio.decode_buffer_count;
+    sl__audio.decode_buffer_pool[index] = new_buffer;
+    sl__audio.decode_buffer_in_use[index] = true;
+    sl__audio.decode_buffer_count++;
+    
+    return index;
+}
+
+void sl__audio_release_decode_buffer(int buffer_index)
+{
+    if (buffer_index >= 0 && buffer_index < (int)sl__audio.decode_buffer_count) {
+        sl__audio.decode_buffer_in_use[buffer_index] = false;
+    }
+}
+
+/* === Active Music Management Functions === */
+
+bool sl__audio_init_active_musics(void)
+{
+    sl__audio.active_musics_capacity = 8;
+    sl__audio.active_musics_count = 0;
+    sl__audio.active_musics = SDL_malloc(sl__audio.active_musics_capacity * sizeof(sl_music_id));
+
+    return sl__audio.active_musics != NULL;
+}
+
+void sl__audio_cleanup_active_musics(void)
+{
+    if (sl__audio.active_musics) {
+        SDL_free(sl__audio.active_musics);
+        sl__audio.active_musics = NULL;
+    }
+    sl__audio.active_musics_count = 0;
+    sl__audio.active_musics_capacity = 0;
+}
+
+bool sl__audio_add_active_music(sl_music_id music_id)
+{
+    // Vérifier si déjà présente
+    for (size_t i = 0; i < sl__audio.active_musics_count; i++) {
+        if (sl__audio.active_musics[i] == music_id) {
+            return true; // Déjà active
+        }
+    }
+    
+    // Agrandir si nécessaire
+    if (sl__audio.active_musics_count >= sl__audio.active_musics_capacity) {
+        size_t new_capacity = sl__audio.active_musics_capacity * 2;
+        sl_music_id* new_array = SDL_realloc(sl__audio.active_musics, 
+                                             new_capacity * sizeof(sl_music_id));
+        if (!new_array) return false;
+        
+        sl__audio.active_musics = new_array;
+        sl__audio.active_musics_capacity = new_capacity;
+    }
+    
+    sl__audio.active_musics[sl__audio.active_musics_count++] = music_id;
+    return true;
+}
+
+void sl__audio_remove_active_music(sl_music_id music_id)
+{
+    for (size_t i = 0; i < sl__audio.active_musics_count; i++) {
+        if (sl__audio.active_musics[i] == music_id) {
+            // Décaler les éléments suivants
+            for (size_t j = i; j < sl__audio.active_musics_count - 1; j++) {
+                sl__audio.active_musics[j] = sl__audio.active_musics[j + 1];
+            }
+            sl__audio.active_musics_count--;
+            break;
+        }
+    }
+}
+
+bool sl__audio_is_music_active(sl_music_id music_id)
+{
+    for (size_t i = 0; i < sl__audio.active_musics_count; i++) {
+        if (sl__audio.active_musics[i] == music_id) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /* === Sound Functions === */
@@ -769,132 +959,146 @@ int sl__music_stream_thread(void* data)
         SDL_LockMutex(sl__audio.music_mutex);
 
         /* --- Wait for work or shutdown signal --- */
-
-        while (sl__audio.current_music == 0 && !SDL_GetAtomicInt(&sl__audio.music_thread_should_stop)) {
+        while (sl__audio.active_musics_count == 0 && !SDL_GetAtomicInt(&sl__audio.music_thread_should_stop)) {
             SDL_WaitCondition(sl__audio.music_condition, sl__audio.music_mutex);
         }
 
         /* --- Check if we should exit --- */
-
         if (SDL_GetAtomicInt(&sl__audio.music_thread_should_stop)) {
             SDL_UnlockMutex(sl__audio.music_mutex);
             break;
         }
 
-        /* --- Get current music --- */
+        /* --- Process all active musics --- */
+        size_t musics_to_remove[sl__audio.active_musics_count];
+        size_t remove_count = 0;
 
-        sl_music_id current_id = sl__audio.current_music;
-        sl__music_t* music = NULL;
+        for (size_t i = 0; i < sl__audio.active_musics_count; i++) {
+            sl_music_id music_id = sl__audio.active_musics[i];
+            sl__music_t* music = sl__registry_get(&sl__audio.reg_musics, music_id);
 
-        if (current_id != 0) {
-            music = sl__registry_get(&sl__audio.reg_musics, current_id);
-        }
+            if (!music) {
+                musics_to_remove[remove_count++] = i;
+                continue;
+            }
 
-        if (!music) {
-            SDL_UnlockMutex(sl__audio.music_mutex);
-            continue;
-        }
+            /* --- Check if music is paused --- */
+            if (music->is_paused) {
+                continue;
+            }
 
-        /* --- Check if music is paused --- */
-
-        if (music->is_paused) {
-            SDL_UnlockMutex(sl__audio.music_mutex);
-            SDL_Delay(16); // ~60 FPS
-            continue;
-        }
-
-        /* --- Check OpenAL source state --- */
-
-        ALint state;
-        alGetSourcei(music->source, AL_SOURCE_STATE, &state);
-
-        /* --- Check how many buffers have been processed --- */
-
-        ALint processed = 0;
-        alGetSourcei(music->source, AL_BUFFERS_PROCESSED, &processed);
-
-        /* --- Process completed buffers --- */
-
-        while (processed > 0 && !SDL_GetAtomicInt(&sl__audio.music_thread_should_stop))
-        {
-            ALuint buffer;
-            alSourceUnqueueBuffers(music->source, 1, &buffer);
-
-            if (!music->decoder.is_finished) {
-                // Decode more data
-                size_t samples_to_read = SL__MUSIC_BUFFER_SIZE / (music->decoder.channels * sizeof(int16_t));
-                size_t sample_read = music->decoder.decode_func(
-                    music->decoder.handle,
-                    music->temp_buffer,
-                    samples_to_read
-                );
-
-                if (sample_read > 0) {
-                    size_t data_size = sample_read * music->decoder.channels * sizeof(int16_t);
-                    alBufferData(buffer, music->decoder.format, music->temp_buffer, 
-                                data_size, music->decoder.sample_rate);
-                    alSourceQueueBuffers(music->source, 1, &buffer);
-                    music->decoder.current_sample += sample_read;
-                } else {
-                    // End of file
-                    if (music->should_loop) {
-                        // Start from the beginning
-                        music->decoder.seek_func(music->decoder.handle, 0);
-                        music->decoder.current_sample = 0;
-                        music->decoder.is_finished = false;
-
-                        // Decode again
-                        sample_read = music->decoder.decode_func(
-                            music->decoder.handle,
-                            music->temp_buffer,
-                            samples_to_read
-                        );
-
-                        if (sample_read > 0) {
-                            size_t data_size = sample_read * music->decoder.channels * sizeof(int16_t);
-                            alBufferData(
-                                buffer, music->decoder.format, music->temp_buffer, 
-                                data_size, music->decoder.sample_rate
-                            );
-                            alSourceQueueBuffers(music->source, 1, &buffer);
-                            music->decoder.current_sample += sample_read;
-                        }
-                    } else {
-                        music->decoder.is_finished = true;
-                    }
+            /* --- Ensure decode buffer is assigned --- */
+            if (music->assigned_buffer_index < 0) {
+                music->assigned_buffer_index = sl__audio_acquire_decode_buffer();
+                if (music->assigned_buffer_index < 0) {
+                    sl_loge("AUDIO: Failed to acquire decode buffer for music ID %d", music_id);
+                    continue;
                 }
             }
 
-            processed--;
+            int16_t* decode_buffer = sl__audio.decode_buffer_pool[music->assigned_buffer_index];
+
+            /* --- Check OpenAL source state --- */
+            ALint state;
+            alGetSourcei(music->source, AL_SOURCE_STATE, &state);
+
+            /* --- Check how many buffers have been processed --- */
+            ALint processed = 0;
+            alGetSourcei(music->source, AL_BUFFERS_PROCESSED, &processed);
+
+            /* --- Process completed buffers --- */
+            while (processed > 0 && !SDL_GetAtomicInt(&sl__audio.music_thread_should_stop)) {
+                ALuint buffer;
+                alSourceUnqueueBuffers(music->source, 1, &buffer);
+
+                if (!music->decoder.is_finished) {
+                    // Decode more data
+                    size_t samples_to_read = SL__MUSIC_BUFFER_SIZE / (music->decoder.channels * sizeof(int16_t));
+                    size_t sample_read = music->decoder.decode_func(music->decoder.handle, decode_buffer, samples_to_read);
+
+                    if (sample_read > 0) {
+                        size_t data_size = sample_read * music->decoder.channels * sizeof(int16_t);
+                        alBufferData(buffer, music->decoder.format, decode_buffer, 
+                                    data_size, music->decoder.sample_rate);
+                        alSourceQueueBuffers(music->source, 1, &buffer);
+                        music->decoder.current_sample += sample_read;
+                    } else {
+                        // End of file
+                        if (music->should_loop) {
+                            // Start from the beginning
+                            music->decoder.seek_func(music->decoder.handle, 0);
+                            music->decoder.current_sample = 0;
+                            music->decoder.is_finished = false;
+
+                            // Decode again
+                            sample_read = music->decoder.decode_func(
+                                music->decoder.handle,
+                                decode_buffer,
+                                samples_to_read
+                            );
+
+                            if (sample_read > 0) {
+                                size_t data_size = sample_read * music->decoder.channels * sizeof(int16_t);
+                                alBufferData(
+                                    buffer, music->decoder.format, decode_buffer, 
+                                    data_size, music->decoder.sample_rate
+                                );
+                                alSourceQueueBuffers(music->source, 1, &buffer);
+                                music->decoder.current_sample += sample_read;
+                            }
+                        } else {
+                            music->decoder.is_finished = true;
+                        }
+                    }
+                }
+
+                processed--;
+            }
+
+            /* --- Check if the source has stopped naturally --- */
+            ALint queued = 0;
+            alGetSourcei(music->source, AL_BUFFERS_QUEUED, &queued);
+
+            if (queued == 0 && music->decoder.is_finished) {
+                // No more buffers and end of file reached - stop this music
+                musics_to_remove[remove_count++] = i;
+
+                // Release the decode buffer since we're stopping
+                if (music->assigned_buffer_index >= 0) {
+                    sl__audio_release_decode_buffer(music->assigned_buffer_index);
+                    music->assigned_buffer_index = -1;
+                }
+
+                // Rewind the music for potential future playback
+                music->decoder.seek_func(music->decoder.handle, 0);
+                music->decoder.current_sample = 0;
+                music->decoder.is_finished = false;
+
+                // Pre-fill buffers for next playback
+                sl__music_prepare_buffers(music);
+            }
+            else if (state != AL_PLAYING && !music->is_paused && queued > 0) {
+                // Check if the source has stopped unexpectedly and restart it
+                sl_logw("AUDIO: Music ID %d source stopped unexpectedly, restarting...", music_id);
+                alSourcePlay(music->source);
+            }
         }
 
-        /* --- Check if the source has stopped naturally --- */
-
-        ALint queued = 0;
-        alGetSourcei(music->source, AL_BUFFERS_QUEUED, &queued);
-
-        if (queued == 0 && music->decoder.is_finished) {
-            // No more buffers and end of file reached - stop this music
-            sl__audio.current_music = 0;
-
-            // Rewind the music for potential future playback
-            music->decoder.seek_func(music->decoder.handle, 0);
-            music->decoder.current_sample = 0;
-            music->decoder.is_finished = false;
-
-            // Pre-fill buffers for next playback
-            sl__music_prepare_buffers(music);
-        }
-        else if (state != AL_PLAYING && !music->is_paused && queued > 0) {
-            // Check if the source has stopped unexpectedly and restart it
-            sl_logw("AUDIO: Music source stopped unexpectedly, restarting...");
-            alSourcePlay(music->source);
+        /* --- Remove finished musics from active list (in reverse order to maintain indices) --- */
+        for (int i = (int)remove_count - 1; i >= 0; i--) {
+            size_t index_to_remove = musics_to_remove[i];
+            sl_music_id music_id = sl__audio.active_musics[index_to_remove];
+            
+            // Shift remaining elements
+            for (size_t j = index_to_remove; j < sl__audio.active_musics_count - 1; j++) {
+                sl__audio.active_musics[j] = sl__audio.active_musics[j + 1];
+            }
+            sl__audio.active_musics_count--;
         }
 
         SDL_UnlockMutex(sl__audio.music_mutex);
 
         /* --- Sleep for a short time to avoid busy waiting --- */
-
         SDL_Delay(16); // ~60 FPS
     }
 
@@ -926,10 +1130,24 @@ void sl__music_unqueue_all_buffers(sl__music_t* music)
 
 void sl__music_prepare_buffers(sl__music_t* music)
 {
+    /* --- Ensure decode buffer is assigned --- */
+
+    if (music->assigned_buffer_index < 0) {
+        music->assigned_buffer_index = sl__audio_acquire_decode_buffer();
+        if (music->assigned_buffer_index < 0) {
+            sl_loge("AUDIO: Failed to acquire decode buffer for music preparation");
+            return;
+        }
+    }
+
+    int16_t* decode_buffer = sl__audio.decode_buffer_pool[music->assigned_buffer_index];
+
+    /* --- Fill buffers with decoded audio data --- */
+
     for (int i = 0; i < SL__MUSIC_BUFFER_COUNT; i++)
     {
         size_t samples_to_read = SL__MUSIC_BUFFER_SIZE / (music->decoder.channels * sizeof(int16_t));
-        size_t sample_read = music->decoder.decode_func(music->decoder.handle, music->temp_buffer, samples_to_read);
+        size_t sample_read = music->decoder.decode_func(music->decoder.handle, decode_buffer, samples_to_read);
         if (sample_read == 0) {
             break;
         }
@@ -937,7 +1155,7 @@ void sl__music_prepare_buffers(sl__music_t* music)
         size_t data_size = sample_read * music->decoder.channels * sizeof(int16_t);
         alBufferData(
             music->buffers[i], music->decoder.format,
-            music->temp_buffer, data_size,
+            decode_buffer, data_size,
             music->decoder.sample_rate
         );
         alSourceQueueBuffers(music->source, 1, &music->buffers[i]);

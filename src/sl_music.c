@@ -80,23 +80,12 @@ sl_music_id sl_music_load(const char* file_path)
         return 0;
     }
 
-    /* --- Allocate the temporary buffer --- */
-
-    music.temp_buffer_size = SL__MUSIC_BUFFER_SIZE;
-    music.temp_buffer = SDL_malloc(music.temp_buffer_size);
-    if (!music.temp_buffer) {
-        sl_loge("AUDIO: Failed to allocate temporary decode buffer for music");
-        alDeleteSources(1, &music.source);
-        alDeleteBuffers(SL__MUSIC_BUFFER_COUNT, music.buffers);
-        music.decoder.close_func(music.decoder.handle);
-        return 0;
-    }
-
     /* --- Initialize states --- */
 
     music.is_paused = false;
     music.should_loop = false;
     music.volume = 1.0f;
+    music.assigned_buffer_index = -1;
 
     /* --- Pre-fill buffers for first playback --- */
 
@@ -112,7 +101,6 @@ sl_music_id sl_music_load(const char* file_path)
         sl_loge("AUDIO: Failed to register music in registry");
         alDeleteSources(1, &music.source);
         alDeleteBuffers(SL__MUSIC_BUFFER_COUNT, music.buffers);
-        SDL_free(music.temp_buffer);
         music.decoder.close_func(music.decoder.handle);
         return 0;
     }
@@ -132,8 +120,8 @@ void sl_music_destroy(sl_music_id music)
 
     if (sl__audio.music_thread_initialized) {
         SDL_LockMutex(sl__audio.music_mutex);
-        if (sl__audio.current_music == music) {
-            sl__audio.current_music = 0;
+        if (sl__audio_is_music_active(music)) {
+            sl__audio_remove_active_music(music);
             SDL_SignalCondition(sl__audio.music_condition);
         }
         SDL_UnlockMutex(sl__audio.music_mutex);
@@ -159,11 +147,10 @@ void sl_music_destroy(sl_music_id music)
         data->decoder.handle = NULL;
     }
 
-    /* --- Clean up temporary buffer --- */
+    /* --- Release decode buffer if assigned --- */
 
-    if (data->temp_buffer) {
-        SDL_free(data->temp_buffer);
-        data->temp_buffer = NULL;
+    if (data->assigned_buffer_index >= 0) {
+        sl__audio_release_decode_buffer(data->assigned_buffer_index);
     }
 
     /* --- Remove from registry --- */
@@ -179,8 +166,6 @@ void sl_music_play(sl_music_id music)
         return;
     }
 
-    /* --- Initialize music thread lazily on first play --- */
-
     if (!sl__music_thread_init()) {
         sl_loge("AUDIO: Failed to initialize music streaming thread");
         return;
@@ -188,46 +173,29 @@ void sl_music_play(sl_music_id music)
 
     SDL_LockMutex(sl__audio.music_mutex);
 
-    /* --- Resume music if paused or start new one --- */
-
-    if (sl__audio.current_music == music && data->is_paused) {
+    // Resume if paused
+    if (sl__audio_is_music_active(music) && data->is_paused) {
         data->is_paused = false;
         alSourcePlay(data->source);
-
-        // Update volume when resuming playback
         float volume = sl__audio_calculate_final_music_volume(data->volume);
         alSourcef(data->source, AL_GAIN, volume);
-
-        // Wake up thread
-        SDL_SignalCondition(sl__audio.music_condition);
-    }
-    else {
-        // Switch to this music (will stop any currently playing music)
-        if (sl__audio.current_music != music) {
-            // Stop current music if any
-            if (sl__audio.current_music != 0) {
-                sl__music_t* current = sl__registry_get(&sl__audio.reg_musics, sl__audio.current_music);
-                if (current) {
-                    alSourceStop(current->source);
-                    sl__music_unqueue_all_buffers(current);
-                }
+    } else {
+        // Add to active list if not already present
+        if (!sl__audio_is_music_active(music)) {
+            if (!sl__audio_add_active_music(music)) {
+                sl_loge("AUDIO: Failed to add music to active list");
+                SDL_UnlockMutex(sl__audio.music_mutex);
+                return;
             }
-            sl__audio.current_music = music;
         }
 
         data->is_paused = false;
-
-        /* --- Update volume start playback --- */
-
         float volume = sl__audio_calculate_final_music_volume(data->volume);
         alSourcef(data->source, AL_GAIN, volume);
         alSourcePlay(data->source);
-
-        /* --- Wake up the streaming thread --- */
-
-        SDL_SignalCondition(sl__audio.music_condition);
     }
 
+    SDL_SignalCondition(sl__audio.music_condition);
     SDL_UnlockMutex(sl__audio.music_mutex);
 }
 
@@ -246,12 +214,12 @@ void sl_music_pause(sl_music_id music)
 
     SDL_LockMutex(sl__audio.music_mutex);
 
-    if (sl__audio.current_music == music && !data->is_paused) {
+    if (sl__audio_is_music_active(music) && !data->is_paused) {
         data->is_paused = true;
         alSourcePause(data->source);
     }
     else {
-        sl_logw("AUDIO: Cannot pause music [ID %d] (not currently playing or already paused)", music);
+        sl_logw("AUDIO: Cannot pause music [ID %d] (not currently active or already paused)", music);
     }
 
     SDL_UnlockMutex(sl__audio.music_mutex);
@@ -272,23 +240,24 @@ void sl_music_stop(sl_music_id music)
 
     SDL_LockMutex(sl__audio.music_mutex);
 
-    if (sl__audio.current_music == music)
-    {
-        sl__audio.current_music = 0;
-
-        // Stop the OpenAL source immediately
+    if (sl__audio_is_music_active(music)) {
+        sl__audio_remove_active_music(music);
+        
         alSourceStop(data->source);
-
-        // Flush queue buffers
         sl__music_unqueue_all_buffers(data);
-
-        // Reset the music to beginning
+        
+        // Release decode buffer
+        if (data->assigned_buffer_index >= 0) {
+            sl__audio_release_decode_buffer(data->assigned_buffer_index);
+            data->assigned_buffer_index = -1;
+        }
+        
+        // Reset music state
         data->decoder.seek_func(data->decoder.handle, 0);
         data->decoder.current_sample = 0;
         data->decoder.is_finished = false;
         data->is_paused = false;
-
-        // Pre-fill buffers for next playback
+        
         sl__music_prepare_buffers(data);
     }
 
@@ -314,7 +283,7 @@ void sl_music_rewind(sl_music_id music)
 
     SDL_LockMutex(sl__audio.music_mutex);
 
-    if (sl__audio.current_music == music) {
+    if (sl__audio_is_music_active(music)) {
         bool wasPaused = data->is_paused;
 
         // Temporarily stop the source
@@ -340,7 +309,7 @@ void sl_music_rewind(sl_music_id music)
         SDL_SignalCondition(sl__audio.music_condition);
     }
     else {
-        // Not currently playing, just rewind the decoder
+        // Not currently active, just rewind the decoder
         data->decoder.seek_func(data->decoder.handle, 0);
         data->decoder.current_sample = 0;
         data->decoder.is_finished = false;
@@ -362,11 +331,11 @@ bool sl_music_is_playing(sl_music_id music)
     }
 
     SDL_LockMutex(sl__audio.music_mutex);
-    bool is_current = (sl__audio.current_music == music);
+    bool is_active = sl__audio_is_music_active(music);
     bool is_paused = data->is_paused;
     SDL_UnlockMutex(sl__audio.music_mutex);
 
-    return is_current && !is_paused;
+    return is_active && !is_paused;
 }
 
 void sl_music_loop(sl_music_id music, bool loop)
@@ -403,8 +372,8 @@ void sl_music_set_volume(sl_music_id music, float volume)
         SDL_LockMutex(sl__audio.music_mutex);
         data->volume = volume;
 
-        // Update OpenAL source volume immediately if this is the current music
-        if (sl__audio.current_music == music) {
+        // Update OpenAL source volume immediately if this music is currently active
+        if (sl__audio_is_music_active(music)) {
             float final_volume = sl__audio_calculate_final_music_volume(volume);
             alSourcef(data->source, AL_GAIN, final_volume);
         }

@@ -86,9 +86,8 @@ typedef struct {
     bool should_loop;
     float volume;
 
-    // Temporary decoding buffer
-    int16_t* temp_buffer;
-    size_t temp_buffer_size;
+    // Index of the assigned buffer in the pool (-1 if none)
+    int assigned_buffer_index;
 
 } sl__music_t;
 
@@ -106,6 +105,18 @@ extern struct sl__audio {
     float volume_master;
     float volume_sound;
     float volume_music;
+
+    // Buffer pool for music decoding
+    int16_t** decode_buffer_pool;
+    size_t decode_buffer_pool_size;
+    bool* decode_buffer_in_use;
+    size_t decode_buffer_count;
+    size_t decode_buffer_capacity;
+
+    // List of currently playing music
+    sl_music_id* active_musics;
+    size_t active_musics_count;
+    size_t active_musics_capacity;
 
     // Music streaming thread
     SDL_Thread* music_thread;
@@ -136,6 +147,22 @@ float sl__audio_calculate_final_sound_volume(void);
 float sl__audio_calculate_final_music_volume(float music_volume);
 void sl__audio_update_all_sound_volumes(void);
 void sl__audio_update_music_volume(sl_music_id music_id);
+
+/* === Buffer Pool Functions === */
+
+bool sl__audio_init_buffer_pool(void);
+void sl__audio_cleanup_buffer_pool(void);
+int sl__audio_acquire_decode_buffer(void);
+void sl__audio_release_decode_buffer(int buffer_index);
+bool sl__audio_ensure_buffer_pool_capacity(size_t needed_capacity);
+
+/* === Active Music Management Functions === */
+
+bool sl__audio_init_active_musics(void);
+void sl__audio_cleanup_active_musics(void);
+bool sl__audio_add_active_music(sl_music_id music_id);
+void sl__audio_remove_active_music(sl_music_id music_id);
+bool sl__audio_is_music_active(sl_music_id music_id);
 
 /* === Sound Functions === */
 
