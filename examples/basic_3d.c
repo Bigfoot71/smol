@@ -11,6 +11,15 @@
 
 #define CAM_POS SL_VEC3(5.0f, 2.0f, 5.0f)
 
+/* === Helper Functions === */
+
+static sl_mat4_t get_normal_matrix(const sl_mat4_t* matrix)
+{
+    sl_mat4_t normal = sl_mat4_inverse(matrix);
+    normal = sl_mat4_transpose(matrix);
+    return normal;
+}
+
 /* === Program === */
 
 int main(void)
@@ -29,6 +38,8 @@ int main(void)
 
     sl_render_set_uniform3f(sl_shader_uniform(shader, "u_light_pos"), 10, 10, 10);
     sl_render_set_uniform_vec3(sl_shader_uniform(shader, "u_view_pos"), &CAM_POS, 1);
+
+    int u_mat_normal = sl_shader_uniform(shader, "u_mat_normal");
 
     /* --- Calculate view / projection --- */
 
@@ -49,6 +60,9 @@ int main(void)
     {
         sl_render_push();
         sl_render_rotate(SL_VEC3(0, sl_time(), sl_time()));
+        sl_mat4_t normal = sl_render_get_transform();
+        normal = get_normal_matrix(&normal);
+        sl_render_set_uniform_mat4(u_mat_normal, normal.a, 1);
         sl_render_clear(SL_BLACK);
         sl_render_set_color(SL_GRAY);
         sl_render_mesh(mesh, 36);

@@ -1,4 +1,14 @@
-#ifdef PIXEL
+#if defined(VERTEX)
+
+uniform mat4 u_mat_normal;
+
+vec4 vertex(mat4 mvp, vec3 position)
+{
+    v_normal = (u_mat_normal * vec4(v_normal, 0.0)).xyz;
+    return mvp * vec4(position, 1.0);
+}
+
+#elif defined(PIXEL)
 
 uniform vec3 u_light_pos;
 uniform vec3 u_view_pos;
