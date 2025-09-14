@@ -644,42 +644,90 @@ SLAPI bool sl_init(const char* title, int w, int h, sl_flags_t flags);
  */
 SLAPI bool sl_init_ex(const char* title, int w, int h, const sl_app_desc_t* desc);
 
-/** Shut down the library and cleanup resources */
+/**
+ * @brief Shut down the library and clean up resources.
+ */
 SLAPI void sl_quit(void);
 
 /**
- * Run one iteration of the main loop
- * @return false if the program should close
- * @note Can be used directly in the main loop: `while (sl_frame_step())`
+ * @brief Run one iteration of the main loop.
+ *
+ * @return false if the program should close.
+ * @note Can be used directly in the main loop, e.g.:
+ *       @code
+ *       while (sl_frame_step()) { ... }
+ *       @endcode
  */
 SLAPI bool sl_frame_step(void);
 
 /* --- Time --- */
 
-/** Get the elapsed time since library initialization (in seconds) */
+/**
+ * @brief Get the elapsed time since library initialization.
+ *
+ * @return Elapsed time in seconds.
+ */
 SLAPI double sl_time(void);
 
-/** Get the time taken by the last frame (in seconds) */
+/**
+ * @brief Get the time taken by the last frame.
+ *
+ * @return Frame delta time in seconds.
+ */
 SLAPI double sl_frame_get_delta(void);
 
-/** Set target frame rate (FPS) */
+/**
+ * @brief Set the target frame rate.
+ *
+ * @param fps Target frames per second (FPS).
+ */
 SLAPI void sl_frame_set_target_fps(int fps);
 
-/** Get current frame rate (FPS) */
+/**
+ * @brief Get the current frame rate.
+ *
+ * @return Current frames per second (FPS).
+ */
 SLAPI int sl_frame_get_fps(void);
 
 /* --- Display ---- */
 
-/** Get display scaling factor */
+/**
+ * @brief Get the display scaling factor.
+ *
+ * Useful for handling high-DPI screens.
+ *
+ * @return Scaling factor of the current display.
+ */
 SLAPI float sl_display_get_scale(void);
 
-/** Get display DPI */
+/**
+ * @brief Get the display DPI (dots per inch).
+ *
+ * Can be used to adjust UI rendering or scaling for better readability.
+ *
+ * @return Display DPI.
+ */
 SLAPI float sl_display_get_dpi(void);
 
-/** Get the current display index */
+/**
+ * @brief Get the index of the current display.
+ *
+ * The index is usually in the range [0 .. N-1], where N is the number of
+ * connected displays.
+ *
+ * @return Current display index.
+ */
 SLAPI int sl_display_get_index(void);
 
-/** Get display size as a 2D vector (width, height) */
+/**
+ * @brief Get the display size.
+ *
+ * The size corresponds to the width and height of the current display
+ * in pixels.
+ *
+ * @return Display size as a 2D vector (width, height).
+ */
 SLAPI sl_vec2_t sl_display_get_size(void);
 
 /* --- Window --- */
